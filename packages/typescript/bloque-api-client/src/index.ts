@@ -1,6 +1,19 @@
 /**
  * @bloque/api-client - HTTP API client for the Bloque ecosystem.
- * Will include Axios interceptors and token management in future iterations.
+ * Zero external dependencies. Uses native fetch (browser + Node 18+ + Deno + Bun).
  */
 
-export const VERSION = "0.1.0";
+export { BloqueClient } from "./client.js";
+export { BloqueApiError } from "./interceptors/error.js";
+export { MemoryTokenStorage, LocalStorageTokenStorage } from "./token-storage.js";
+export { createAuthInterceptor } from "./interceptors/auth.js";
+export { createTenantInterceptor } from "./interceptors/tenant.js";
+export { createErrorInterceptor } from "./interceptors/error.js";
+
+export type {
+  ClientConfig,
+  RequestOptions,
+  RequestInterceptor,
+  ResponseInterceptor,
+  TokenStorage,
+} from "./types.js";

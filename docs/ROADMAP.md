@@ -6,14 +6,14 @@
 
 Valor dia 1. Un developer puede instalar bloques basicos y tener una API multitenant funcional.
 
-- [ ] Estructura monorepo (uv + pnpm + Turborepo)
-- [ ] `bloque-core` - Middleware, schemas, logging, health
-- [ ] `bloque-auth` - JWT RS256, RBAC, brute force, TenantCredential
-- [ ] `bloque-multitenant` - PostgreSQL RLS transparente via contextvars
-- [ ] `examples/api-simple` - Ejemplo funcional minimo
-- [ ] README publico + LICENSE MIT
-- [ ] CI/CD basico (GitHub Actions)
-- [ ] Publicacion en PyPI (packages Python)
+- [x] Estructura monorepo (uv + pnpm + Turborepo)
+- [x] `bloque-core` - Middleware, schemas, logging, health
+- [x] `bloque-auth` - JWT RS256, RBAC, brute force, TenantCredential
+- [x] `bloque-multitenant` - PostgreSQL RLS transparente via contextvars
+- [x] `examples/api-simple` - Ejemplo funcional minimo
+- [x] README publico + LICENSE MIT
+- [x] CI/CD basico (GitHub Actions)
+- [ ] Publicacion en PyPI (packages Python) - pyproject.toml listos, pendiente cuenta PyPI + `uv publish`
 
 ---
 
@@ -21,9 +21,9 @@ Valor dia 1. Un developer puede instalar bloques basicos y tener una API multite
 
 Bloques TypeScript y templates Copier para scaffolding completo.
 
-- [ ] `@bloque/ui` - shadcn/ui componentes base
-- [ ] `@bloque/api-client` - Cliente HTTP con interceptors + token management
-- [ ] `@bloque/types` - TypeScript types base (auth, pagination, etc)
+- [x] `@bloque/types` - TypeScript types base (entity, api, auth, tenant)
+- [x] `@bloque/api-client` - Cliente HTTP con interceptors + token management (fetch nativo, zero deps)
+- [x] `@bloque/ui` - Tailwind CSS preset + cn() utility + design tokens
 - [ ] `@bloque/auth-react` - Hooks + providers + guards
 - [ ] Template Copier: base (Turborepo + pnpm + uv)
 - [ ] Template Copier: backend-fastapi

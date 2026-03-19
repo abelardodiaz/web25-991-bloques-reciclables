@@ -1,7 +1,7 @@
 # Catalogo de Bloques
 
 > Documento vivo. Se actualiza cada vez que se agrega un bloque nuevo.
-> Ultima actualizacion: 2026-03-19
+> Ultima actualizacion: 2026-03-19 (Fase 2: 3 bloques TS implementados)
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Bloque | Descripcion | Dependencias | Instalar | Status |
 |--------|-------------|-------------|----------|--------|
-| `bloque-core` | Middleware, schemas, logging, health checks | fastapi, pydantic, structlog | `uv add bloque-core` | Planificado |
-| `bloque-auth` | JWT RS256, RBAC, brute force, TenantCredential | bloque-core, pyjwt, cryptography | `uv add bloque-auth` | Planificado |
-| `bloque-multitenant` | PostgreSQL RLS transparente via contextvars | bloque-core, sqlalchemy, asyncpg | `uv add bloque-multitenant` | Planificado |
+| `bloque-core` | Middleware, schemas, logging, health checks | fastapi, pydantic, structlog | `uv add bloque-core` | MVP |
+| `bloque-auth` | JWT RS256, RBAC, brute force, TenantCredential | bloque-core, pyjwt, cryptography | `uv add bloque-auth` | MVP |
+| `bloque-multitenant` | PostgreSQL RLS transparente via contextvars | bloque-core, sqlalchemy, asyncpg | `uv add bloque-multitenant` | MVP |
 | `bloque-redis` | Cache + Streams + consumer groups | redis | `uv add bloque-redis` | Futuro |
 | `bloque-gateway` | API Gateway con rate limiting y proxy | bloque-core, httpx | `uv add bloque-gateway` | Futuro |
 | `bloque-ai-rag` | ChromaDB + LLM gateway multitenant | chromadb, httpx | `uv add bloque-ai-rag` | Futuro |
@@ -25,9 +25,9 @@
 
 | Bloque | Descripcion | Dependencias | Instalar | Status |
 |--------|-------------|-------------|----------|--------|
-| `@bloque/ui` | shadcn/ui componentes base | react, tailwindcss, radix-ui | `pnpm add @bloque/ui` | Planificado |
-| `@bloque/api-client` | Cliente HTTP con interceptors + token mgmt | axios | `pnpm add @bloque/api-client` | Planificado |
-| `@bloque/types` | TypeScript types base (auth, pagination) | - | `pnpm add @bloque/types` | Planificado |
+| `@bloque/types` | TypeScript types base (entity, api, auth, tenant) | - | `pnpm add @bloque/types` | MVP |
+| `@bloque/api-client` | Cliente HTTP con interceptors + token mgmt | @bloque/types, fetch nativo | `pnpm add @bloque/api-client` | MVP |
+| `@bloque/ui` | Tailwind CSS preset + cn() utility + design tokens | clsx, tailwind-merge | `pnpm add @bloque/ui` | MVP |
 | `@bloque/auth-react` | Hooks + providers + guards | @bloque/types, react | `pnpm add @bloque/auth-react` | Futuro |
 | `@bloque/dashboard` | Layout: sidebar, header, tenant selector | @bloque/ui, @bloque/auth-react | `pnpm add @bloque/dashboard` | Futuro |
 

@@ -2,17 +2,32 @@
   "name": "@bloque/api-client",
   "version": "0.1.0",
   "description": "HTTP API client with interceptors and token management",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abelardodiaz/web25-991-bloques-reciclables",
+    "directory": "packages/typescript/bloque-api-client"
+  },
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src", "README.md"],
   "scripts": {
     "build": "tsc",
-    "lint": "echo 'no lint configured yet'",
-    "test": "echo 'no tests yet'"
+    "lint": "biome check src/",
+    "test": "vitest run"
   },
   "dependencies": {
     "@bloque/types": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   }
 }
