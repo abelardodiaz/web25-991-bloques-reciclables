@@ -1,0 +1,47 @@
+# ============================================================================
+# PROJECT.yaml - Archivo de metadatos del proyecto
+# ============================================================================
+#
+# PARA CLAUDE (IA): Este archivo es leido por el Project Manager (99999) para:
+#   1. Detectar el estado del proyecto (online/offline)
+#   2. Saber que puertos monitorear
+#   3. Entender la arquitectura del proyecto
+#
+# INSTRUCCIONES PARA CLAUDE:
+#   - Si haces cambios de version, actualiza 'project.version'
+#   - Siempre actualiza 'updated_at' y 'updated_by' al modificar
+#   - El 'updated_by' debe ser tu identificador (ej: claude-991)
+#
+# NO MODIFICAR SIN RAZON:
+#   - project.code (identificador unico)
+#   - server.location (donde corre el proyecto)
+#   - server.base_path (ruta del proyecto)
+#
+# ============================================================================
+
+project:
+  code: web25-991
+  name: Bloques Reciclables
+  full_code: web25-991-bloques-reciclables
+  version: 0.1.0
+  status: activo
+  description: Ecosistema open source de bloques de codigo reciclables multi-stack
+  type: library
+
+server:
+  location: local-windows
+  base_path: C:\Users\abela\prweb\public\web25-991-bloques-reciclables
+
+service:
+  type: none
+  expect_offline: true
+
+urls:
+  github: https://github.com/abelardodiaz/web25-991-bloques-reciclables
+  gitlab: https://gitlab.com/abelardodiaz/web25-991-bloques-reciclables
+
+stack:
+  primary: python+typescript
+
+updated_at: "2026-03-19T22:00:00"
+updated_by: claude-991

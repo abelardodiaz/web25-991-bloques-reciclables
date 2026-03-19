@@ -1,0 +1,12 @@
+[project]
+name = "api-simple"
+version = "0.1.0"
+description = "Simple API example using bloque-core"
+requires-python = ">=3.11"
+dependencies = [
+    "bloque-core",
+    "uvicorn>=0.30",
+]
+
+[tool.uv.sources]
+bloque-core = { workspace = true }
