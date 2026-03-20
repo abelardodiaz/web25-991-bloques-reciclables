@@ -16,6 +16,10 @@ class TimingMiddleware(BaseHTTPMiddleware):
     Adds X-Process-Time header to the response.
     """
 
+    def __init__(self, app, slow_request_threshold: float = 1.0) -> None:
+        super().__init__(app)
+        self.slow_request_threshold = slow_request_threshold
+
     async def dispatch(self, request: Request, call_next) -> Response:
         start_time = time.perf_counter()
 
@@ -26,7 +30,7 @@ class TimingMiddleware(BaseHTTPMiddleware):
 
         response.headers["X-Process-Time"] = f"{process_time_ms}ms"
 
-        if process_time > 1.0:
+        if process_time > self.slow_request_threshold:
             logger.warning(
                 "Slow request: path=%s method=%s duration_ms=%s",
                 request.url.path,

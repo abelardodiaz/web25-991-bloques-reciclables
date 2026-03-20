@@ -1,5 +1,5 @@
 """Health check endpoint."""
 
-from .router import health_router
+from .router import create_health_router, health_router
 
-__all__ = ["health_router"]
+__all__ = ["create_health_router", "health_router"]
