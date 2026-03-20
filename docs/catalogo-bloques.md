@@ -1,7 +1,7 @@
 # Catalogo de Bloques
 
 > Documento vivo. Se actualiza cada vez que se agrega un bloque nuevo.
-> Ultima actualizacion: 2026-03-20 (Fase 3: bloque-billing)
+> Ultima actualizacion: 2026-03-20 (Fase 4: bloque-docker-prod)
 
 ---
 
@@ -48,8 +48,8 @@
 
 | Bloque | Descripcion | Instalar | Status |
 |--------|-------------|----------|--------|
-| `bloque-docker-dev` | Docker Compose para desarrollo (PG + Redis) | Template Copier | Futuro |
-| `bloque-docker-prod` | Docker Compose produccion + nginx | Template Copier | Futuro |
+| `bloque-docker-dev` | Docker Compose dev: PostgreSQL + Redis + ChromaDB, health checks, env helpers | `uv add bloque-docker-dev` | MVP |
+| `bloque-docker-prod` | Docker Compose produccion: nginx reverse proxy, multi-stage Dockerfile, env validation, health checks | `uv add bloque-docker-prod` | MVP |
 | `bloque-ci-github` | GitHub Actions (lint, test, publish) | Template Copier | Planificado |
 | `bloque-ci-gitlab` | GitLab CI equivalente | Template Copier | Futuro |
 

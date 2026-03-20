@@ -1,0 +1,53 @@
+# Multi-stage production Dockerfile for Bloques FastAPI apps
+# Copy to your project root as "Dockerfile" and customize
+
+# ---- Stage 1: build ----
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+# Install uv for fast dependency resolution
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy dependency files first (cache layer)
+COPY pyproject.toml uv.lock* ./
+
+# Install dependencies (no dev)
+RUN uv sync --no-dev --frozen 2>/dev/null || uv sync --no-dev
+
+# Copy application source
+COPY src/ ./src/
+
+# ---- Stage 2: runtime ----
+FROM python:3.12-slim AS runtime
+
+# Security: non-root user
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser
+
+WORKDIR /app
+
+# Copy installed packages and source from builder
+COPY --from=builder /build/.venv /app/.venv
+COPY --from=builder /build/src /app/src
+
+# Set PATH to use venv
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Healthcheck endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${APP_PORT:-8000}/health')" || exit 1
+
+# Switch to non-root
+USER appuser
+
+EXPOSE ${APP_PORT:-8000}
+
+# Gunicorn with uvicorn workers (customize entrypoint)
+CMD ["python", "-m", "gunicorn", "app.main:app", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]
