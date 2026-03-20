@@ -1,8 +1,27 @@
 [project]
 name = "bloque-core"
 version = "0.1.0"
-description = "Core utilities: middleware, schemas, logging, health checks"
+description = "Core utilities for building web APIs: middleware, schemas, logging, health checks"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
+authors = [
+    { name = "Abelardo Diaz", email = "abelardo@bloques.dev" },
+]
+keywords = ["fastapi", "middleware", "schemas", "logging", "health-check", "api"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
 dependencies = [
     "fastapi>=0.115.0",
     "pydantic>=2.0",
@@ -12,6 +31,12 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-asyncio>=0.24", "httpx>=0.27"]
+
+[project.urls]
+Homepage = "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
+Documentation = "https://github.com/abelardodiaz/web25-991-bloques-reciclables/tree/main/packages/python/bloque-core"
+Repository = "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
+Issues = "https://github.com/abelardodiaz/web25-991-bloques-reciclables/issues"
 
 [build-system]
 requires = ["hatchling"]

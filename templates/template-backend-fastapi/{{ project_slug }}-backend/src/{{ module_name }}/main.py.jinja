@@ -1,0 +1,92 @@
+"""{{ project_name }} - FastAPI application."""
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from bloque_core.health import health_router
+from bloque_core.logging import setup_logging
+from bloque_core.middleware import RequestIDMiddleware, TimingMiddleware
+
+from bloque_auth.jwt.manager import JWTManager
+from bloque_auth.rbac.permissions import configure as configure_rbac
+
+{% if include_multitenant %}
+from bloque_multitenant.rls.middleware import TenantMiddleware
+{% endif %}
+
+from .config import Settings
+from .routes.auth import auth_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan: setup and teardown."""
+    settings: Settings = app.state.settings
+
+    # Setup structured logging
+    setup_logging(
+        level="DEBUG" if settings.debug else "INFO",
+        json_format=not settings.debug,
+        service_name=settings.app_name,
+    )
+
+    # Configure JWT manager
+    private_key = None
+    public_key = None
+
+    if settings.jwt_private_key_path:
+        with open(settings.jwt_private_key_path) as f:
+            private_key = f.read()
+
+    if settings.jwt_public_key_path:
+        with open(settings.jwt_public_key_path) as f:
+            public_key = f.read()
+
+    jwt_manager = JWTManager(
+        private_key=private_key,
+        public_key=public_key,
+        algorithm=settings.jwt_algorithm,
+    )
+    app.state.jwt_manager = jwt_manager
+
+    # Configure RBAC with the JWT manager
+    configure_rbac(jwt_manager)
+
+    yield
+
+
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    settings = Settings()
+
+    app = FastAPI(
+        title=settings.app_name,
+        debug=settings.debug,
+        lifespan=lifespan,
+    )
+
+    # Store settings in app state
+    app.state.settings = settings
+
+    # -- Middleware (order matters: last added = first executed) --
+
+{% if include_multitenant %}
+    # Multitenant middleware: extracts tenant_id from request state (set by auth)
+    app.add_middleware(TenantMiddleware)
+
+{% endif %}
+    # Timing middleware: measures request processing time
+    app.add_middleware(TimingMiddleware)
+
+    # Request ID middleware: generates/propagates X-Request-ID
+    app.add_middleware(RequestIDMiddleware)
+
+    # -- Routers --
+    app.include_router(health_router)
+    app.include_router(auth_router, prefix="/auth", tags=["auth"])
+
+    return app
+
+
+app = create_app()

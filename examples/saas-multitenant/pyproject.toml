@@ -1,0 +1,19 @@
+[project]
+name = "example-saas-multitenant"
+version = "0.1.0"
+description = "SaaS multitenant example using bloque-core + bloque-auth + bloque-multitenant"
+requires-python = ">=3.11"
+dependencies = [
+    "bloque-core",
+    "bloque-auth",
+    "bloque-multitenant",
+    "uvicorn>=0.30",
+]
+
+[project.optional-dependencies]
+dev = ["httpx>=0.27"]
+
+[tool.uv.sources]
+bloque-core = { workspace = true }
+bloque-auth = { workspace = true }
+bloque-multitenant = { workspace = true }

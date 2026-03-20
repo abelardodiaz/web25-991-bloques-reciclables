@@ -1,0 +1,10 @@
+import { BloqueClient, LocalStorageTokenStorage } from "@bloque/api-client";
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "{{ api_url }}";
+
+export const tokenStorage = new LocalStorageTokenStorage();
+
+export const bloqueClient = new BloqueClient({
+  baseUrl: apiUrl,
+  tokenStorage,
+});

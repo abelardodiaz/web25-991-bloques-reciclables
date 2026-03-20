@@ -1,0 +1,87 @@
+"""{{ project_name }} - Authentication routes."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel
+
+from bloque_auth.jwt.manager import TokenData
+from bloque_auth.rbac.permissions import get_current_user
+
+auth_router = APIRouter()
+
+
+class LoginRequest(BaseModel):
+    """Login request body."""
+
+    username: str
+    password: str
+    tenant_id: str = "default"
+
+
+class TokenResponse(BaseModel):
+    """Token response body."""
+
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class UserResponse(BaseModel):
+    """Current user info response."""
+
+    user_id: str
+    tenant_id: str
+    roles: list[str]
+    permissions: list[str]
+
+
+@auth_router.post("/login", response_model=TokenResponse)
+async def login(body: LoginRequest, request: Request) -> TokenResponse:
+    """
+    Authenticate a user and return JWT tokens.
+
+    TODO: Replace this stub with your actual user authentication logic
+    (database lookup, password hash verification, etc.).
+    """
+    # --- STUB: replace with real authentication ---
+    # This is a placeholder. In production, you would:
+    # 1. Look up the user in your database
+    # 2. Verify the password hash
+    # 3. Load the user's roles and permissions
+    if body.username == "" or body.password == "":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
+
+    jwt_manager = request.app.state.jwt_manager
+
+    access_token = jwt_manager.create_access_token(
+        user_id=body.username,
+        tenant_id=body.tenant_id,
+        roles=["user"],
+        permissions=["read"],
+    )
+    refresh_token = jwt_manager.create_refresh_token(
+        user_id=body.username,
+        tenant_id=body.tenant_id,
+    )
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
+
+
+@auth_router.get("/me", response_model=UserResponse)
+async def get_me(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+) -> UserResponse:
+    """Return the current authenticated user's information."""
+    return UserResponse(
+        user_id=current_user.user_id,
+        tenant_id=current_user.tenant_id,
+        roles=current_user.roles,
+        permissions=current_user.permissions,
+    )

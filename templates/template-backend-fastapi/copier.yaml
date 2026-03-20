@@ -1,0 +1,55 @@
+_min_copier_version: "9.0.0"
+
+_metadata:
+  name: "Bloques Backend FastAPI Template"
+  description: "FastAPI backend template using bloque-core, bloque-auth, and optionally bloque-multitenant"
+
+project_name:
+  type: str
+  help: "Human-readable project name (e.g. My Awesome API)"
+
+project_slug:
+  type: str
+  default: "{{ project_name | lower | replace(' ', '-') | replace('_', '-') }}"
+  help: "Slug used for directory and package name (e.g. my-awesome-api)"
+
+module_name:
+  type: str
+  default: "{{ project_slug | replace('-', '_') }}"
+  help: "Python module name (e.g. my_awesome_api)"
+
+python_version:
+  type: str
+  default: "3.11"
+  help: "Minimum Python version"
+  choices:
+    - "3.11"
+    - "3.12"
+    - "3.13"
+
+database_url:
+  type: str
+  default: "postgresql+asyncpg://postgres:postgres@localhost:5432/mydb"
+  help: "Default database URL (async SQLAlchemy format)"
+
+jwt_algorithm:
+  type: str
+  default: "RS256"
+  help: "JWT signing algorithm"
+  choices:
+    - "RS256"
+    - "HS256"
+
+include_multitenant:
+  type: bool
+  default: true
+  help: "Include bloque-multitenant for PostgreSQL RLS multitenancy?"
+
+author:
+  type: str
+  help: "Author name"
+
+description:
+  type: str
+  default: "A FastAPI backend built with Bloques Reciclables"
+  help: "Short project description"

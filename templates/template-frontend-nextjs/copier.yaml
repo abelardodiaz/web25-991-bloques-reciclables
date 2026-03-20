@@ -1,0 +1,32 @@
+_min_copier_version: "9.0.0"
+_subdirectory: ""
+
+project_name:
+  type: str
+  help: "Name of your frontend project"
+  validator: "{% if not project_name %}Project name is required{% endif %}"
+
+project_slug:
+  type: str
+  default: "{{ project_name | lower | replace(' ', '-') | replace('_', '-') }}"
+  help: "URL-friendly project identifier (auto-generated from project_name)"
+
+description:
+  type: str
+  default: "Frontend application built with Next.js and Bloque ecosystem"
+  help: "Short description of the project"
+
+author:
+  type: str
+  help: "Author name"
+  default: ""
+
+api_url:
+  type: str
+  default: "http://localhost:8000"
+  help: "Base URL of the backend API"
+
+include_multitenant:
+  type: bool
+  default: true
+  help: "Include multi-tenant support (TenantProvider, useTenant)"

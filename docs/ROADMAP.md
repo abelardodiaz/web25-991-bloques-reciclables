@@ -24,10 +24,10 @@ Bloques TypeScript y templates Copier para scaffolding completo.
 - [x] `@bloque/types` - TypeScript types base (entity, api, auth, tenant)
 - [x] `@bloque/api-client` - Cliente HTTP con interceptors + token management (fetch nativo, zero deps)
 - [x] `@bloque/ui` - Tailwind CSS preset + cn() utility + design tokens
-- [ ] `@bloque/auth-react` - Hooks + providers + guards
-- [ ] Template Copier: base (Turborepo + pnpm + uv)
-- [ ] Template Copier: backend-fastapi
-- [ ] Template Copier: frontend-nextjs
+- [x] `@bloque/auth-react` - Hooks + providers + guards (React Context, JWT decode, RBAC guards)
+- [x] Template Copier: base (Turborepo + pnpm + uv)
+- [x] Template Copier: backend-fastapi
+- [x] Template Copier: frontend-nextjs
 - [ ] Publicacion en npm (packages TS)
 
 ---
@@ -43,7 +43,7 @@ Se agregan conforme surjan necesidades en proyectos reales.
 - [ ] `bloque-notifications` - Email + push + templates
 - [ ] `bloque-automation` - Rule engine + condition evaluator
 - [ ] `bloque-billing` - Stripe integration
-- [ ] `@bloque/dashboard` - Layout base con sidebar, header, tenant selector
+- [x] `@bloque/dashboard` - Layout base con sidebar, header, data tables, nav, tenant selector
 
 ---
 
@@ -74,6 +74,6 @@ Migrar componentes de proyectos existentes al ecosistema de bloques.
 |---------|--------|
 | Tiempo para crear API multitenant | < 1 hora |
 | Bloques disponibles Fase 1 | 3 (core, auth, multitenant) |
-| Bloques disponibles Fase 2 | 7 (+4 frontend) |
+| Bloques disponibles Fase 2 | 7 (+4 frontend) + 3 templates |
 | Tests passing | 100% en CI |
 | Documentacion por bloque | README + ejemplo |

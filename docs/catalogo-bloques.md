@@ -1,7 +1,7 @@
 # Catalogo de Bloques
 
 > Documento vivo. Se actualiza cada vez que se agrega un bloque nuevo.
-> Ultima actualizacion: 2026-03-19 (Fase 2: 3 bloques TS implementados)
+> Ultima actualizacion: 2026-03-20 (Fase 3: @bloque/dashboard)
 
 ---
 
@@ -28,8 +28,18 @@
 | `@bloque/types` | TypeScript types base (entity, api, auth, tenant) | - | `pnpm add @bloque/types` | MVP |
 | `@bloque/api-client` | Cliente HTTP con interceptors + token mgmt | @bloque/types, fetch nativo | `pnpm add @bloque/api-client` | MVP |
 | `@bloque/ui` | Tailwind CSS preset + cn() utility + design tokens | clsx, tailwind-merge | `pnpm add @bloque/ui` | MVP |
-| `@bloque/auth-react` | Hooks + providers + guards | @bloque/types, react | `pnpm add @bloque/auth-react` | Futuro |
-| `@bloque/dashboard` | Layout: sidebar, header, tenant selector | @bloque/ui, @bloque/auth-react | `pnpm add @bloque/dashboard` | Futuro |
+| `@bloque/auth-react` | Hooks + providers + guards (JWT decode, RBAC mirrors) | @bloque/types, @bloque/api-client, react | `pnpm add @bloque/auth-react` | MVP |
+| `@bloque/dashboard` | Layout: sidebar, header, data tables, nav, tenant selector | @bloque/ui, @bloque/types | `pnpm add @bloque/dashboard` | MVP |
+
+---
+
+## Templates Copier
+
+| Template | Descripcion | Comando | Status |
+|----------|-------------|---------|--------|
+| `template-base` | Monorepo base (Turborepo + pnpm + uv) | `copier copy templates/template-base ./` | MVP |
+| `template-backend-fastapi` | Backend FastAPI con bloque-core + bloque-auth | `copier copy templates/template-backend-fastapi ./` | MVP |
+| `template-frontend-nextjs` | Frontend Next.js con @bloque/auth-react + @bloque/ui | `copier copy templates/template-frontend-nextjs ./` | MVP |
 
 ---
 

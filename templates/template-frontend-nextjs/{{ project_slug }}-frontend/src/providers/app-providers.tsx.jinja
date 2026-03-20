@@ -1,0 +1,20 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { BloqueProvider, AuthProvider } from "@bloque/auth-react";
+{% if include_multitenant %}import { TenantProvider } from "@bloque/auth-react";{% endif %}
+import { bloqueClient, tokenStorage } from "@/lib/bloque-client";
+
+interface AppProvidersProps {
+  children: ReactNode;
+}
+
+export function AppProviders({ children }: AppProvidersProps) {
+  return (
+    <BloqueProvider client={bloqueClient}>
+      <AuthProvider tokenStorage={tokenStorage}>
+{% if include_multitenant %}        <TenantProvider>{children}</TenantProvider>{% else %}        {children}{% endif %}
+      </AuthProvider>
+    </BloqueProvider>
+  );
+}

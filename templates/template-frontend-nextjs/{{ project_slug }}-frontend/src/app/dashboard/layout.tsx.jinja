@@ -1,0 +1,52 @@
+"use client";
+
+import { RequireAuth } from "@bloque/auth-react";
+import { useLogout } from "@bloque/auth-react";
+import Link from "next/link";
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { logout } = useLogout();
+
+  return (
+    <RequireAuth fallback={<RedirectToLogin />}>
+      <div className="min-h-screen">
+        <header className="border-b bg-background">
+          <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
+            <Link href="/dashboard" className="text-lg font-semibold">
+              {{ project_name }}
+            </Link>
+            <button
+              onClick={() => logout()}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        </header>
+        <main className="mx-auto max-w-7xl p-4">{children}</main>
+      </div>
+    </RequireAuth>
+  );
+}
+
+function RedirectToLogin() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center space-y-4">
+        <p className="text-muted-foreground">
+          You must be signed in to access this page.
+        </p>
+        <Link
+          href="/login"
+          className="inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          Go to Sign In
+        </Link>
+      </div>
+    </div>
+  );
+}

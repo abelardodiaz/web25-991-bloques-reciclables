@@ -1,0 +1,70 @@
+"use client";
+
+import { useAuth } from "@bloque/auth-react";
+{% if include_multitenant %}import { useTenant } from "@bloque/auth-react";{% endif %}
+
+export default function DashboardPage() {
+  const { user } = useAuth();
+{% if include_multitenant %}  const { tenant, isLoading: isTenantLoading } = useTenant();{% endif %}
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Welcome back, {user?.email ?? "User"}
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* User Info Card */}
+        <div className="rounded-lg border bg-card p-6 shadow-sm">
+          <h2 className="text-sm font-medium text-muted-foreground">
+            Account
+          </h2>
+          <div className="mt-2 space-y-1">
+            <p className="text-lg font-semibold">{user?.email}</p>
+            <p className="text-sm text-muted-foreground">
+              ID: {user?.id ?? "N/A"}
+            </p>
+          </div>
+        </div>
+{% if include_multitenant %}
+        {/* Tenant Info Card */}
+        <div className="rounded-lg border bg-card p-6 shadow-sm">
+          <h2 className="text-sm font-medium text-muted-foreground">
+            Tenant
+          </h2>
+          <div className="mt-2 space-y-1">
+            {isTenantLoading ? (
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            ) : tenant ? (
+              <>
+                <p className="text-lg font-semibold">{tenant.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  Slug: {tenant.slug}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No tenant selected
+              </p>
+            )}
+          </div>
+        </div>
+{% endif %}
+        {/* Quick Actions Card */}
+        <div className="rounded-lg border bg-card p-6 shadow-sm">
+          <h2 className="text-sm font-medium text-muted-foreground">
+            Quick Actions
+          </h2>
+          <div className="mt-4 flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">
+              Add your custom actions here.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

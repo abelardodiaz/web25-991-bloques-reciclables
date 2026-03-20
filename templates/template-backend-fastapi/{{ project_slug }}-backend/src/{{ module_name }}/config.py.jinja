@@ -1,0 +1,22 @@
+"""{{ project_name }} - Application settings."""
+
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    """Application settings loaded from environment variables."""
+
+    app_name: str = "{{ project_name }}"
+    debug: bool = False
+
+    database_url: str = "{{ database_url }}"
+
+    jwt_algorithm: str = "{{ jwt_algorithm }}"
+    jwt_private_key_path: str | None = None
+    jwt_public_key_path: str | None = None
+
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False,
+    }

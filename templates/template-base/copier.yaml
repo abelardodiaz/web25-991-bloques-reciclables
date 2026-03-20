@@ -1,0 +1,23 @@
+# Copier template: template-base
+# Base project scaffold for bloques-reciclables ecosystem
+# Usage: copier copy templates/template-base ./my-project
+
+_min_copier_version: "9.0.0"
+
+project_name:
+  type: str
+  help: "Name of your project (e.g. My Awesome App)"
+
+project_slug:
+  type: str
+  default: "{{ project_name | lower | replace(' ', '-') | replace('_', '-') }}"
+  help: "Project slug used for directory and package name"
+
+author:
+  type: str
+  help: "Author name"
+
+description:
+  type: str
+  default: "A project built with bloques-reciclables"
+  help: "Short description of the project"

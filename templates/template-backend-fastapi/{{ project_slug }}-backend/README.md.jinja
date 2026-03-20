@@ -1,0 +1,79 @@
+# {{ project_name }}
+
+{{ description }}
+
+Built with [Bloques Reciclables](https://github.com/abelardodiaz/web25-991-bloques-reciclables).
+
+## Stack
+
+- **FastAPI** - Web framework
+- **bloque-core** - Health checks, middleware (RequestID, Timing), structured logging
+- **bloque-auth** - JWT RS256 authentication, RBAC (roles + permissions)
+{% if include_multitenant %}- **bloque-multitenant** - PostgreSQL RLS transparent multitenancy
+{% endif %}
+
+## Quick Start
+
+### 1. Install dependencies
+
+```bash
+uv sync
+```
+
+### 2. Generate JWT keys
+
+```bash
+mkdir -p keys
+openssl genrsa -out keys/private.pem 2048
+openssl rsa -in keys/private.pem -pubout -out keys/public.pem
+```
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env
+# Edit .env with your database URL and other settings
+```
+
+### 4. Run the server
+
+```bash
+uvicorn {{ module_name }}.main:app --reload
+```
+
+### 5. Open the API docs
+
+Visit [http://localhost:8000/docs](http://localhost:8000/docs) for the interactive Swagger UI.
+
+## Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| POST | `/auth/login` | Authenticate and get JWT tokens |
+| GET | `/auth/me` | Get current user info (requires Bearer token) |
+
+## Project Structure
+
+```
+{{ project_slug }}-backend/
+  src/{{ module_name }}/
+    __init__.py
+    main.py          # FastAPI app factory
+    config.py         # Pydantic settings
+    routes/
+      __init__.py
+      auth.py         # Auth endpoints
+      health.py       # Health router re-export
+  tests/
+    __init__.py
+    test_health.py    # Health endpoint test
+  .env.example
+  pyproject.toml
+```
+
+## Running Tests
+
+```bash
+pytest
+```

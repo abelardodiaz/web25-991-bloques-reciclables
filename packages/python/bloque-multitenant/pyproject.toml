@@ -1,8 +1,28 @@
 [project]
 name = "bloque-multitenant"
 version = "0.1.0"
-description = "PostgreSQL RLS transparent multitenancy via contextvars"
+description = "PostgreSQL RLS transparent multitenancy via contextvars for FastAPI + SQLAlchemy"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
+authors = [
+    { name = "Abelardo Diaz", email = "abelardo@bloques.dev" },
+]
+keywords = ["fastapi", "multitenancy", "postgresql", "rls", "row-level-security", "sqlalchemy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
 dependencies = [
     "bloque-core",
     "sqlalchemy[asyncio]>=2.0",
@@ -11,6 +31,12 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-asyncio>=0.24"]
+
+[project.urls]
+Homepage = "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
+Documentation = "https://github.com/abelardodiaz/web25-991-bloques-reciclables/tree/main/packages/python/bloque-multitenant"
+Repository = "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
+Issues = "https://github.com/abelardodiaz/web25-991-bloques-reciclables/issues"
 
 [tool.uv.sources]
 bloque-core = { workspace = true }

@@ -1,0 +1,16 @@
+import type { Config } from "tailwindcss";
+import { bloquePreset } from "@bloque/ui";
+
+const config: Config = {
+  presets: [bloquePreset],
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@bloque/ui/dist/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+export default config;
