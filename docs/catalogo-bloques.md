@@ -1,7 +1,7 @@
 # Catalogo de Bloques
 
 > Documento vivo. Se actualiza cada vez que se agrega un bloque nuevo.
-> Ultima actualizacion: 2026-03-20 (Fase 3: bloque-notifications)
+> Ultima actualizacion: 2026-03-20 (Fase 3: bloque-automation)
 
 ---
 
@@ -17,7 +17,7 @@
 | `bloque-ai-rag` | ChromaDB + LLM gateway multitenant | bloque-core, httpx | `uv add bloque-ai-rag` | MVP |
 | `bloque-channels` | WhatsApp, Telegram, Email webhooks | bloque-core, httpx | `uv add bloque-channels` | MVP |
 | `bloque-notifications` | Email + push + templates | bloque-core, httpx | `uv add bloque-notifications` | MVP |
-| `bloque-automation` | Rule engine + condition evaluator | bloque-core | `uv add bloque-automation` | Futuro |
+| `bloque-automation` | Rule engine + condition evaluator | bloque-core | `uv add bloque-automation` | MVP |
 
 ---
 
