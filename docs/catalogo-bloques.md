@@ -1,7 +1,7 @@
 # Catalogo de Bloques
 
 > Documento vivo. Se actualiza cada vez que se agrega un bloque nuevo.
-> Ultima actualizacion: 2026-03-20 (Fase 3: @bloque/dashboard)
+> Ultima actualizacion: 2026-03-20 (Fase 3: bloque-redis)
 
 ---
 
@@ -12,7 +12,7 @@
 | `bloque-core` | Middleware, schemas, logging, health checks | fastapi, pydantic, structlog | `uv add bloque-core` | MVP |
 | `bloque-auth` | JWT RS256, RBAC, brute force, TenantCredential | bloque-core, pyjwt, cryptography | `uv add bloque-auth` | MVP |
 | `bloque-multitenant` | PostgreSQL RLS transparente via contextvars | bloque-core, sqlalchemy, asyncpg | `uv add bloque-multitenant` | MVP |
-| `bloque-redis` | Cache + Streams + consumer groups | redis | `uv add bloque-redis` | Futuro |
+| `bloque-redis` | Cache + Streams + consumer groups | bloque-core, redis[hiredis] | `uv add bloque-redis` | MVP |
 | `bloque-gateway` | API Gateway con rate limiting y proxy | bloque-core, httpx | `uv add bloque-gateway` | Futuro |
 | `bloque-ai-rag` | ChromaDB + LLM gateway multitenant | chromadb, httpx | `uv add bloque-ai-rag` | Futuro |
 | `bloque-channels` | WhatsApp, Telegram, Email webhooks | bloque-core, httpx | `uv add bloque-channels` | Futuro |
