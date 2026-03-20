@@ -38,7 +38,7 @@ Se agregan conforme surjan necesidades en proyectos reales.
 
 - [x] `bloque-redis` - Cache + Streams + consumer groups
 - [x] `bloque-gateway` - API Gateway con rate limiting, proxy, circuit breaker
-- [ ] `bloque-ai-rag` - ChromaDB + LLM gateway multitenant
+- [x] `bloque-ai-rag` - ChromaDB + LLM gateway multitenant
 - [x] `bloque-channels` - WhatsApp, Telegram, Email webhooks
 - [ ] `bloque-notifications` - Email + push + templates
 - [ ] `bloque-automation` - Rule engine + condition evaluator
