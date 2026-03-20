@@ -1,0 +1,48 @@
+stages:
+- lint
+- test
+- publish
+python-lint:
+  stage: lint
+  image: python:3.12
+  before_script:
+  - pip install uv
+  - uv sync --all-packages
+  script:
+  - uv run ruff check .
+  cache:
+    paths:
+    - .venv/
+    key: python
+  rules:
+  - if: $CI_COMMIT_TAG
+python-test:
+  stage: test
+  image: python:3.12
+  before_script:
+  - pip install uv
+  - uv sync --all-packages
+  script:
+  - uv run pytest
+  cache:
+    paths:
+    - .venv/
+    key: python
+  rules:
+  - if: $CI_COMMIT_TAG
+publish-pypi:
+  stage: publish
+  image: python:3.12
+  before_script:
+  - pip install uv
+  - uv sync --all-packages
+  script:
+  - uv build
+  - uv publish
+  variables:
+    UV_PUBLISH_TOKEN: $PYPI_TOKEN
+  needs:
+  - python-lint
+  - python-test
+  rules:
+  - if: $CI_COMMIT_TAG

@@ -1,0 +1,50 @@
+stages:
+- lint
+- build
+- publish
+typescript-lint:
+  stage: lint
+  image: node:20
+  before_script:
+  - npm install -g pnpm
+  - pnpm install
+  script:
+  - pnpm run lint
+  cache:
+    paths:
+    - node_modules/
+    - .pnpm-store/
+    key: typescript
+  rules:
+  - if: $CI_COMMIT_TAG
+typescript-build:
+  stage: build
+  image: node:20
+  before_script:
+  - npm install -g pnpm
+  - pnpm install
+  script:
+  - pnpm run build
+  cache:
+    paths:
+    - node_modules/
+    - .pnpm-store/
+    key: typescript
+  rules:
+  - if: $CI_COMMIT_TAG
+publish-npm:
+  stage: publish
+  image: node:20
+  before_script:
+  - npm install -g pnpm
+  - pnpm install
+  script:
+  - pnpm run build
+  - pnpm publish --no-git-checks
+  variables:
+    NODE_AUTH_TOKEN: $NPM_TOKEN
+  needs:
+  - typescript-lint
+  - typescript-build
+  rules:
+  - if: $CI_COMMIT_TAG

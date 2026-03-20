@@ -54,7 +54,7 @@ Bloques de infraestructura para desarrollo y produccion.
 - [x] `bloque-docker-dev` - Docker Compose para desarrollo (PostgreSQL + Redis + ChromaDB)
 - [x] `bloque-docker-prod` - Docker Compose produccion + nginx
 - [x] `bloque-ci-github` - GitHub Actions completo (lint, test, publish)
-- [ ] `bloque-ci-gitlab` - GitLab CI equivalente
+- [x] `bloque-ci-gitlab` - GitLab CI equivalente (23 tests)
 
 ---
 

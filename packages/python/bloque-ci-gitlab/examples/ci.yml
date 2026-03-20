@@ -1,0 +1,66 @@
+stages:
+- lint
+- test
+- build
+python-lint:
+  stage: lint
+  image: python:3.12
+  before_script:
+  - pip install uv
+  - uv sync --all-packages
+  script:
+  - uv run ruff check .
+  cache:
+    paths:
+    - .venv/
+    key: python
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "push"
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+python-test:
+  stage: test
+  image: python:3.12
+  before_script:
+  - pip install uv
+  - uv sync --all-packages
+  script:
+  - uv run pytest
+  cache:
+    paths:
+    - .venv/
+    key: python
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "push"
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+typescript-lint:
+  stage: lint
+  image: node:20
+  before_script:
+  - npm install -g pnpm
+  - pnpm install
+  script:
+  - pnpm run lint
+  cache:
+    paths:
+    - node_modules/
+    - .pnpm-store/
+    key: typescript
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "push"
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+typescript-build:
+  stage: build
+  image: node:20
+  before_script:
+  - npm install -g pnpm
+  - pnpm install
+  script:
+  - pnpm run build
+  cache:
+    paths:
+    - node_modules/
+    - .pnpm-store/
+    key: typescript
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "push"
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
