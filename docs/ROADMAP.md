@@ -40,7 +40,7 @@ Se agregan conforme surjan necesidades en proyectos reales.
 - [x] `bloque-gateway` - API Gateway con rate limiting, proxy, circuit breaker
 - [x] `bloque-ai-rag` - ChromaDB + LLM gateway multitenant
 - [x] `bloque-channels` - WhatsApp, Telegram, Email webhooks
-- [ ] `bloque-notifications` - Email + push + templates
+- [x] `bloque-notifications` - Email + push + templates
 - [ ] `bloque-automation` - Rule engine + condition evaluator
 - [ ] `bloque-billing` - Stripe integration
 - [x] `@bloque/dashboard` - Layout base con sidebar, header, data tables, nav, tenant selector
