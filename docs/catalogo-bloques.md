@@ -1,7 +1,7 @@
 # Catalogo de Bloques
 
 > Documento vivo. Se actualiza cada vez que se agrega un bloque nuevo.
-> Ultima actualizacion: 2026-03-20 (Fase 3: bloque-automation)
+> Ultima actualizacion: 2026-03-20 (Fase 3: bloque-billing)
 
 ---
 
@@ -18,6 +18,7 @@
 | `bloque-channels` | WhatsApp, Telegram, Email webhooks | bloque-core, httpx | `uv add bloque-channels` | MVP |
 | `bloque-notifications` | Email + push + templates | bloque-core, httpx | `uv add bloque-notifications` | MVP |
 | `bloque-automation` | Rule engine + condition evaluator | bloque-core | `uv add bloque-automation` | MVP |
+| `bloque-billing` | Stripe billing: customers, subscriptions, checkout, webhooks | bloque-core, httpx | `uv add bloque-billing` | MVP |
 
 ---
 
@@ -67,6 +68,7 @@
 | bloque-redis | 048 CRM | `server005:.../shared/python/crm_shared/redis/` |
 | bloque-ai-rag | 048 CRM | `server005:.../services/ai-service/` |
 | bloque-channels | 048 CRM | `server005:.../services/channels-service/` |
+| bloque-billing | 048 CRM (billing-stripe) | `server005:.../services/billing-service/` |
 | @bloque/ui | 048 CRM (migrado a shadcn) | `server005:.../frontend/packages/@crm/ui/` |
 | @bloque/api-client | 048 CRM | `server005:.../frontend/packages/@crm/api-client/` |
 | @bloque/types | 048 CRM | `server005:.../frontend/packages/@crm/types/` |

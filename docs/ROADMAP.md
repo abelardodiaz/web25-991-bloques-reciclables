@@ -42,7 +42,7 @@ Se agregan conforme surjan necesidades en proyectos reales.
 - [x] `bloque-channels` - WhatsApp, Telegram, Email webhooks
 - [x] `bloque-notifications` - Email + push + templates
 - [x] `bloque-automation` - Rule engine + condition evaluator
-- [ ] `bloque-billing` - Stripe integration
+- [x] `bloque-billing` - Stripe integration
 - [x] `@bloque/dashboard` - Layout base con sidebar, header, data tables, nav, tenant selector
 
 ---
