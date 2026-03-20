@@ -18,4 +18,4 @@ ignore = ["B008"]  # Allow Depends() in FastAPI default args
 [tool.pytest.ini_options]
 testpaths = ["packages/python"]
 asyncio_mode = "auto"
-import_mode = "importlib"
+addopts = "--import-mode=importlib"

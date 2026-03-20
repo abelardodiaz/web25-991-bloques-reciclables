@@ -37,7 +37,7 @@ Bloques TypeScript y templates Copier para scaffolding completo.
 Se agregan conforme surjan necesidades en proyectos reales.
 
 - [x] `bloque-redis` - Cache + Streams + consumer groups
-- [ ] `bloque-gateway` - API Gateway con rate limiting, proxy
+- [x] `bloque-gateway` - API Gateway con rate limiting, proxy, circuit breaker
 - [ ] `bloque-ai-rag` - ChromaDB + LLM gateway multitenant
 - [ ] `bloque-channels` - WhatsApp, Telegram, Email webhooks
 - [ ] `bloque-notifications` - Email + push + templates
