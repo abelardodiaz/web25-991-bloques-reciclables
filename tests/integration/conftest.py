@@ -17,12 +17,12 @@ from sqlalchemy import Column, Float, ForeignKey, Integer, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, relationship
 
-from bloque_auth.jwt import JWTManager
-from bloque_auth.rbac.permissions import configure as configure_rbac
-from bloque_auth.rbac.permissions import get_current_user, require_permissions
-from bloque_db import Base, SoftDeleteMixin, TimestampMixin, get_db_session
-from bloque_testing.auth import create_jwt_manager, create_test_token
-from bloque_testing.db import create_tables, create_test_engine, create_test_session_factory, drop_tables
+from ulfblk_auth.jwt import JWTManager
+from ulfblk_auth.rbac.permissions import configure as configure_rbac
+from ulfblk_auth.rbac.permissions import get_current_user, require_permissions
+from ulfblk_db import Base, SoftDeleteMixin, TimestampMixin, get_db_session
+from ulfblk_testing.auth import create_jwt_manager, create_test_token
+from ulfblk_testing.db import create_tables, create_test_engine, create_test_session_factory, drop_tables
 
 
 # ---------------------------------------------------------------------------

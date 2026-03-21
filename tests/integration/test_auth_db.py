@@ -1,8 +1,8 @@
-"""Tests that JWT auth from bloque-auth works alongside database queries from bloque-db."""
+"""Tests that JWT auth from ulfblk-auth works alongside database queries from ulfblk-db."""
 
 from sqlalchemy import select
 
-from bloque_testing.auth import create_test_token
+from ulfblk_testing.auth import create_test_token
 
 from .conftest import User
 

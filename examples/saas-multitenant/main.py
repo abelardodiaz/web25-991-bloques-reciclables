@@ -1,10 +1,10 @@
 """SaaS Multitenant API - Real Database Example.
 
 Demonstrates 4 bloques working together with a real database:
-- bloque-core: App factory, middleware, schemas, health check
-- bloque-auth: JWT RS256, RBAC, brute force protection
-- bloque-db: SQLAlchemy models with composable mixins, async engine
-- bloque-multitenant: Tenant context via contextvars
+- ulfblk-core: App factory, middleware, schemas, health check
+- ulfblk-auth: JWT RS256, RBAC, brute force protection
+- ulfblk-db: SQLAlchemy models with composable mixins, async engine
+- ulfblk-multitenant: Tenant context via contextvars
 
 Uses SQLite by default (zero config). For PostgreSQL:
     export BLOQUE_DATABASE_URL=postgresql+asyncpg://user:pass@localhost/mydb
@@ -18,17 +18,17 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from bloque_auth.brute_force import BruteForceProtection, LoginAttemptState
-from bloque_auth.jwt import JWTManager
-from bloque_auth.rbac import (
+from ulfblk_auth.brute_force import BruteForceProtection, LoginAttemptState
+from ulfblk_auth.jwt import JWTManager
+from ulfblk_auth.rbac import (
     configure,
     get_current_user,
     require_permissions,
     require_roles,
 )
-from bloque_core import create_app, get_logger, setup_logging
-from bloque_core.schemas import PaginatedResponse
-from bloque_multitenant.context import get_current_tenant, set_current_tenant
+from ulfblk_core import create_app, get_logger, setup_logging
+from ulfblk_core.schemas import PaginatedResponse
+from ulfblk_multitenant.context import get_current_tenant, set_current_tenant
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import Depends, HTTPException, status
@@ -83,13 +83,13 @@ async def lifespan(app):
 
 
 # ---------------------------------------------------------------------------
-# App (using create_app from bloque-core)
+# App (using create_app from ulfblk-core)
 # ---------------------------------------------------------------------------
 app = create_app(
     service_name="saas-multitenant",
     version="0.1.0",
     title="SaaS Multitenant Example",
-    description="Demonstrates bloque-core + bloque-auth + bloque-db + bloque-multitenant",
+    description="Demonstrates ulfblk-core + ulfblk-auth + ulfblk-db + ulfblk-multitenant",
     lifespan=lifespan,
 )
 

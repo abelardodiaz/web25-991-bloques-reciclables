@@ -2,17 +2,17 @@
 
 Full SaaS API example demonstrating 4 Python bloques working together with a real database:
 
-- **bloque-core**: App factory (`create_app`), middleware, schemas, health check
-- **bloque-auth**: JWT RS256, RBAC, brute force protection
-- **bloque-db**: SQLAlchemy models with composable mixins, async engine, session factory
-- **bloque-multitenant**: Tenant context isolation via contextvars
+- **ulfblk-core**: App factory (`create_app`), middleware, schemas, health check
+- **ulfblk-auth**: JWT RS256, RBAC, brute force protection
+- **ulfblk-db**: SQLAlchemy models with composable mixins, async engine, session factory
+- **ulfblk-multitenant**: Tenant context isolation via contextvars
 
 ## How It Works
 
 This example shows how a developer composes bloques into a real application:
 
 1. **Models** (`models.py`): `User(Base, TimestampMixin, SoftDeleteMixin)` and `Order(Base, TimestampMixin)` with FK relationships
-2. **Database** (`database.py`): Engine + session factory via `bloque-db`, zero config with SQLite
+2. **Database** (`database.py`): Engine + session factory via `ulfblk-db`, zero config with SQLite
 3. **Seed data** (`seed.py`): Demo users and orders for 2 tenants (Acme, Globex)
 4. **App** (`main.py`): FastAPI with JWT auth, RBAC, tenant-filtered DB queries, soft delete
 
@@ -106,7 +106,7 @@ Try logging in with wrong password 5 times - the account gets locked for 15 minu
 For production with actual Row-Level Security:
 
 ```python
-from bloque_multitenant.rls import apply_rls, generate_rls_sql
+from ulfblk_multitenant.rls import apply_rls, generate_rls_sql
 
 # 1. Generate and execute RLS SQL in your migration
 sql = generate_rls_sql("orders", tenant_column="tenant_id")

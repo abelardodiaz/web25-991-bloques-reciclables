@@ -1,0 +1,47 @@
+[project]
+name = "ulfblk-ai-rag"
+version = "0.1.0"
+description = "RAG pipeline: ChromaDB vector search + LLM gateway multi-provider (DeepSeek, OpenAI, Ollama)"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Abelardo Diaz", email = "abelardo@bloques.dev" },
+]
+keywords = ["rag", "chromadb", "llm", "deepseek", "openai", "ollama", "vector-search", "ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
+dependencies = [
+    "ulfblk-core",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.24"]
+
+[project.urls]
+Homepage = "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
+Documentation = "https://github.com/abelardodiaz/web25-991-bloques-reciclables/tree/main/packages/python/ulfblk-ai-rag"
+Repository = "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
+Issues = "https://github.com/abelardodiaz/web25-991-bloques-reciclables/issues"
+
+[tool.uv.sources]
+ulfblk-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ulfblk_ai_rag"]

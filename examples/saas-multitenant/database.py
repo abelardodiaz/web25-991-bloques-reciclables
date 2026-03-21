@@ -1,4 +1,4 @@
-"""Database setup using bloque-db infrastructure.
+"""Database setup using ulfblk-db infrastructure.
 
 Uses SQLite by default (zero config). Override with env var:
     BLOQUE_DATABASE_URL=postgresql+asyncpg://user:pass@localhost/mydb
@@ -6,7 +6,7 @@ Uses SQLite by default (zero config). Override with env var:
 
 from __future__ import annotations
 
-from bloque_db import (
+from ulfblk_db import (
     DatabaseSettings,
     create_async_engine,
     create_session_factory,

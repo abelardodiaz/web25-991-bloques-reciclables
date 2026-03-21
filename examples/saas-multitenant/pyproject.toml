@@ -1,13 +1,13 @@
 [project]
 name = "example-saas-multitenant"
 version = "0.1.0"
-description = "SaaS multitenant example using bloque-core + bloque-auth + bloque-db + bloque-multitenant"
+description = "SaaS multitenant example using ulfblk-core + ulfblk-auth + ulfblk-db + ulfblk-multitenant"
 requires-python = ">=3.11"
 dependencies = [
-    "bloque-core",
-    "bloque-auth",
-    "bloque-db",
-    "bloque-multitenant",
+    "ulfblk-core",
+    "ulfblk-auth",
+    "ulfblk-db",
+    "ulfblk-multitenant",
     "aiosqlite>=0.20",
     "uvicorn>=0.30",
 ]
@@ -16,7 +16,7 @@ dependencies = [
 dev = ["httpx>=0.27"]
 
 [tool.uv.sources]
-bloque-core = { workspace = true }
-bloque-auth = { workspace = true }
-bloque-db = { workspace = true }
-bloque-multitenant = { workspace = true }
+ulfblk-core = { workspace = true }
+ulfblk-auth = { workspace = true }
+ulfblk-db = { workspace = true }
+ulfblk-multitenant = { workspace = true }

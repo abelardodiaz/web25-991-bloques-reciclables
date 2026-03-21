@@ -1,11 +1,11 @@
-"""Tests that bloque-multitenant tenant context works with bloque-db models."""
+"""Tests that ulfblk-multitenant tenant context works with ulfblk-db models."""
 
 import asyncio
 
 from sqlalchemy import select
 
-from bloque_multitenant.context import get_current_tenant, set_current_tenant
-from bloque_multitenant.rls import generate_rls_sql
+from ulfblk_multitenant.context import get_current_tenant, set_current_tenant
+from ulfblk_multitenant.rls import generate_rls_sql
 
 from .conftest import Order, User
 

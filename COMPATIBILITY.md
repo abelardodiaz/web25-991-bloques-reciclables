@@ -6,7 +6,7 @@
 
 ## Tested Combinations
 
-| bloque-core | bloque-db | bloque-auth | bloque-multitenant | bloque-testing | Status |
+| ulfblk-core | ulfblk-db | ulfblk-auth | ulfblk-multitenant | ulfblk-testing | Status |
 |-------------|-----------|-------------|--------------------|-----------------------------------------|--------|
 | 0.1.0       | 0.1.0     | 0.1.0       | 0.1.0              | 0.1.0          | PASS   |
 
@@ -26,32 +26,32 @@ All bloques target Python >= 3.11 and share these foundational dependencies:
 ## Dependency Graph
 
 ```
-bloque-core (standalone, no bloque deps)
+ulfblk-core (standalone, no bloque deps)
   |
-  +-- bloque-db (depends on bloque-core)
+  +-- ulfblk-db (depends on ulfblk-core)
   |
-  +-- bloque-auth (depends on bloque-core)
+  +-- ulfblk-auth (depends on ulfblk-core)
   |
-  +-- bloque-multitenant (depends on bloque-core)
+  +-- ulfblk-multitenant (depends on ulfblk-core)
   |
-  +-- bloque-testing (optional deps on bloque-auth, bloque-db)
+  +-- ulfblk-testing (optional deps on ulfblk-auth, ulfblk-db)
 ```
 
-No circular dependencies. Each bloque depends only on bloque-core.
+No circular dependencies. Each bloque depends only on ulfblk-core.
 
 ## How Composability Works
 
 Bloques do NOT export concrete models. They export:
 
-- **bloque-core**: App factory, middleware, settings, schemas, health checks
-- **bloque-db**: `Base`, mixins (`TimestampMixin`, `SoftDeleteMixin`), engine/session factories
-- **bloque-auth**: `JWTManager`, RBAC dependencies (`require_permissions`, `require_roles`)
-- **bloque-multitenant**: `TenantContext`, `TenantMiddleware`, RLS SQL generation
+- **ulfblk-core**: App factory, middleware, settings, schemas, health checks
+- **ulfblk-db**: `Base`, mixins (`TimestampMixin`, `SoftDeleteMixin`), engine/session factories
+- **ulfblk-auth**: `JWTManager`, RBAC dependencies (`require_permissions`, `require_roles`)
+- **ulfblk-multitenant**: `TenantContext`, `TenantMiddleware`, RLS SQL generation
 
 The developer defines their own models in their application:
 
 ```python
-from bloque_db import Base, TimestampMixin, SoftDeleteMixin
+from ulfblk_db import Base, TimestampMixin, SoftDeleteMixin
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 

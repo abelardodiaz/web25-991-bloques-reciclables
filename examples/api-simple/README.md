@@ -1,6 +1,6 @@
 # API Simple
 
-Minimal FastAPI example using `bloque-core`.
+Minimal FastAPI example using `ulfblk-core`.
 
 ## Run
 

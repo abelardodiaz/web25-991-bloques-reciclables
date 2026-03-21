@@ -1,4 +1,4 @@
-"""Application models using bloque-db mixins.
+"""Application models using ulfblk-db mixins.
 
 This is where the DEVELOPER defines their own models. Bloques provide
 Base, TimestampMixin, SoftDeleteMixin - the developer composes them
@@ -12,7 +12,7 @@ import json
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, relationship
 
-from bloque_db import Base, SoftDeleteMixin, TimestampMixin
+from ulfblk_db import Base, SoftDeleteMixin, TimestampMixin
 
 
 class User(Base, TimestampMixin, SoftDeleteMixin):

@@ -1,7 +1,7 @@
 """Tests a complete FastAPI app using all bloques together."""
 
-from bloque_testing.auth import create_test_token
-from bloque_testing.client import create_authenticated_client, create_test_client
+from ulfblk_testing.auth import create_test_token
+from ulfblk_testing.client import create_authenticated_client, create_test_client
 
 
 class TestFullStack:

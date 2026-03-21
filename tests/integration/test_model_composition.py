@@ -1,4 +1,4 @@
-"""Tests that bloque-db mixins compose correctly into real models with relationships."""
+"""Tests that ulfblk-db mixins compose correctly into real models with relationships."""
 
 from sqlalchemy import inspect as sa_inspect, select
 

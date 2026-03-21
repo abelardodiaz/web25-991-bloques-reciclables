@@ -1,0 +1,62 @@
+[project]
+name = "ulfblk-testing"
+version = "0.1.0"
+description = "Shared testing utilities and pytest fixtures for the Bloques ecosystem"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Abelardo Diaz", email = "abelardo@bloques.dev" },
+]
+keywords = ["testing", "pytest", "fixtures", "fastapi", "bloques"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+    "fastapi>=0.115.0",
+]
+
+[project.optional-dependencies]
+auth = ["pyjwt[crypto]>=2.8", "cryptography>=42.0"]
+db = ["sqlalchemy[asyncio]>=2.0", "aiosqlite>=0.20"]
+all = ["ulfblk-testing[auth,db]"]
+dev = [
+    "pytest-asyncio>=0.24",
+    "ulfblk-core",
+    "ulfblk-auth",
+    "ulfblk-db",
+]
+
+[project.entry-points."pytest11"]
+ulfblk_testing = "ulfblk_testing.plugin"
+
+[project.urls]
+Homepage = "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
+Documentation = "https://github.com/abelardodiaz/web25-991-bloques-reciclables/tree/main/packages/python/ulfblk-testing"
+Repository = "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
+Issues = "https://github.com/abelardodiaz/web25-991-bloques-reciclables/issues"
+
+[tool.uv.sources]
+ulfblk-core = { workspace = true }
+ulfblk-auth = { workspace = true }
+ulfblk-db = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ulfblk_testing"]

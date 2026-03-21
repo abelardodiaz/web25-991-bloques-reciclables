@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    profiles: [core, ai]
+    container_name: bloques-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bloques}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bloques_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-bloques_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bloques}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    profiles: [core, ai]
+    container_name: bloques-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  chromadb:
+    image: chromadb/chroma:latest
+    profiles: [ai]
+    container_name: bloques-chromadb
+    environment:
+      ANONYMIZED_TELEMETRY: "false"
+    ports:
+      - "${CHROMADB_PORT:-8000}:8000"
+    volumes:
+      - chromadata:/chroma/chroma
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/heartbeat')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
+  chromadata:
