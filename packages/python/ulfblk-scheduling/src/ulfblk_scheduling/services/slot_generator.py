@@ -138,12 +138,26 @@ def _is_slot_available(
         True if the slot has no conflicts.
     """
     for appt in appointments:
-        appt_end = appt.scheduled_at + timedelta(minutes=appt.duration_minutes)
-        if slot_start < appt_end and slot_end > appt.scheduled_at:
+        # Normalize timezone: SQLite strips tz info, so make both naive or both aware
+        appt_start = appt.scheduled_at
+        if appt_start.tzinfo is None and slot_start.tzinfo is not None:
+            appt_start = appt_start.replace(tzinfo=slot_start.tzinfo)
+        elif appt_start.tzinfo is not None and slot_start.tzinfo is None:
+            appt_start = appt_start.replace(tzinfo=None)
+        appt_end = appt_start + timedelta(minutes=appt.duration_minutes)
+        if slot_start < appt_end and slot_end > appt_start:
             return False
 
     for block in blocked_slots:
-        if slot_start < block.end_at and slot_end > block.start_at:
+        block_start = block.start_at
+        block_end = block.end_at
+        if block_start.tzinfo is None and slot_start.tzinfo is not None:
+            block_start = block_start.replace(tzinfo=slot_start.tzinfo)
+            block_end = block_end.replace(tzinfo=slot_start.tzinfo)
+        elif block_start.tzinfo is not None and slot_start.tzinfo is None:
+            block_start = block_start.replace(tzinfo=None)
+            block_end = block_end.replace(tzinfo=None)
+        if slot_start < block_end and slot_end > block_start:
             return False
 
     return True
