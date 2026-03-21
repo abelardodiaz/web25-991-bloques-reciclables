@@ -49,6 +49,12 @@ Todas las settings heredan de `BloqueSettings`. Un `.env` con `BLOQUE_*` configu
 ### 5. Zero-Config para Desarrollo
 SQLite por defecto (sin instalar PostgreSQL). Cambia a PostgreSQL con un env var cuando estes listo para produccion.
 
+### 6. Migraciones Alembic Integradas
+`uv add ulfblk-db[migrations]` y tienes CLI para init, create, upgrade, downgrade. Templates async-ready pre-configurados.
+
+### 7. Admin Panel con react-admin
+`@ulfblk/admin` provee DataProvider + AuthProvider. 5 lineas para tener CRUD admin con login, permisos, y tenant isolation.
+
 ## Cuando Usar ulfblk
 
 - Estas haciendo un SaaS multitenant con FastAPI
