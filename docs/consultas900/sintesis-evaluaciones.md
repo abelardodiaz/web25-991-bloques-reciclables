@@ -16,7 +16,7 @@
 | 7 | **Distribucion PyPI/npm** | No publicado = no usable externamente | `uv add bloque-core` fallara sin PyPI | "Es codigo interno reempaquetado" sin publicacion | -- | ALTA |
 | 8 | **Config centralizada** | Falta gestion unificada de configuracion | Registro central - bloques no deben leer env vars independientemente | BaseSettings con validacion (dotenv, secrets) | Aqui es donde va CORS y similares: BloqueSettings base que cada proyecto extienda con sus propios valores (origenes permitidos, timeouts, etc). pydantic-settings ya es dep de core pero no se usa - justificar la dependencia | MEDIA |
 | 9 | **Competencia y diferenciacion** | No comunica ventaja clara vs alternativas | vs SaaS Pegasus/ShipFast: dependencias vs codigo fuente = mas rigido | vs Django/Supabase, tabla comparativa. Falta "killer feature" | -- | MEDIA |
-| 10 | **Ejemplo integracion real** | Pausar bloques nuevos, enfocarse en demo E2E | "Integration sprint" con IoC y Mixins | CLI unica `bloque create`, tutorial "Build SaaS in 1 hour". Puntuacion: 5/10 | -- | ALTA |
+| 10 | **Ejemplo integracion real** | Pausar bloques nuevos, enfocarse en demo E2E | "Integration sprint" con IoC y Mixins | CLI unica `bloque create`, tutorial "Build SaaS in 1 hour". Puntuacion: 5/10 | Reescrito examples/saas-multitenant/ de dicts en memoria a SQLAlchemy real. 4 bloques (core+auth+db+multitenant). SQLite zero-config default, PostgreSQL via env var. Modelos con mixins composables, FK relationships, soft delete. No frontend en este sprint (es otro ambito) | ALTA |
 
 ---
 

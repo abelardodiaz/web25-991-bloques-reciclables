@@ -1,17 +1,22 @@
-"""SaaS Multitenant API example.
+"""SaaS Multitenant API - Real Database Example.
 
-Demonstrates:
-- bloque-core: middleware, schemas, logging, health
+Demonstrates 4 bloques working together with a real database:
+- bloque-core: App factory, middleware, schemas, health check
 - bloque-auth: JWT RS256, RBAC, brute force protection
-- bloque-multitenant: tenant context via contextvars
+- bloque-db: SQLAlchemy models with composable mixins, async engine
+- bloque-multitenant: Tenant context via contextvars
+
+Uses SQLite by default (zero config). For PostgreSQL:
+    export BLOQUE_DATABASE_URL=postgresql+asyncpg://user:pass@localhost/mydb
 
 Run with:
     cd examples/saas-multitenant
     uv run uvicorn main:app --reload
-
-Note: This example uses in-memory data. For real PostgreSQL RLS,
-see the setup instructions in the README.
 """
+
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
 
 from bloque_auth.brute_force import BruteForceProtection, LoginAttemptState
 from bloque_auth.jwt import JWTManager
@@ -21,15 +26,19 @@ from bloque_auth.rbac import (
     require_permissions,
     require_roles,
 )
-from bloque_core.health import health_router
-from bloque_core.logging import get_logger, setup_logging
-from bloque_core.middleware import RequestIDMiddleware, TimingMiddleware
+from bloque_core import create_app, get_logger, setup_logging
 from bloque_core.schemas import PaginatedResponse
 from bloque_multitenant.context import get_current_tenant, set_current_tenant
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database import SessionLocal, db_dep, init_db
+from models import Order, User
+from seed import seed_data
 
 # ---------------------------------------------------------------------------
 # RSA key pair (generated at startup for demo - in production use env vars)
@@ -59,58 +68,30 @@ jwt_manager = JWTManager(
 configure(jwt_manager)
 
 brute_force = BruteForceProtection(max_attempts=5, lockout_minutes=15)
-
-# ---------------------------------------------------------------------------
-# In-memory data (simulates database)
-# ---------------------------------------------------------------------------
-USERS = {
-    "admin@acme.com": {
-        "user_id": "user-1",
-        "password": "admin123",
-        "tenant_id": "acme",
-        "roles": ["admin"],
-        "permissions": ["users:read", "users:write", "users:delete", "orders:read", "orders:write"],
-    },
-    "user@acme.com": {
-        "user_id": "user-2",
-        "password": "user123",
-        "tenant_id": "acme",
-        "roles": ["user"],
-        "permissions": ["orders:read", "orders:write"],
-    },
-    "admin@globex.com": {
-        "user_id": "user-3",
-        "password": "admin123",
-        "tenant_id": "globex",
-        "roles": ["admin"],
-        "permissions": ["users:read", "users:write", "orders:read"],
-    },
-}
-
-ORDERS = {
-    "acme": [
-        {"id": "ord-1", "product": "Widget A", "amount": 150.00, "tenant_id": "acme"},
-        {"id": "ord-2", "product": "Widget B", "amount": 299.99, "tenant_id": "acme"},
-    ],
-    "globex": [
-        {"id": "ord-3", "product": "Gadget X", "amount": 499.00, "tenant_id": "globex"},
-    ],
-}
-
 LOGIN_STATES: dict[str, LoginAttemptState] = {}
 
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
-app = FastAPI(
-    title="SaaS Multitenant Example",
-    description="Demonstrates bloque-core + bloque-auth + bloque-multitenant",
-    version="0.1.0",
-)
 
-app.add_middleware(TimingMiddleware)
-app.add_middleware(RequestIDMiddleware)
-app.include_router(health_router)
+# ---------------------------------------------------------------------------
+# Lifespan: init DB + seed data
+# ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app):
+    await init_db()
+    await seed_data(SessionLocal)
+    logger.info("database.ready", msg="Tables created and demo data seeded")
+    yield
+
+
+# ---------------------------------------------------------------------------
+# App (using create_app from bloque-core)
+# ---------------------------------------------------------------------------
+app = create_app(
+    service_name="saas-multitenant",
+    version="0.1.0",
+    title="SaaS Multitenant Example",
+    description="Demonstrates bloque-core + bloque-auth + bloque-db + bloque-multitenant",
+    lifespan=lifespan,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -127,8 +108,16 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class UserOut(BaseModel):
+    id: int
+    email: str
+    name: str
+    tenant_id: str
+    roles: list[str]
+
+
 class OrderOut(BaseModel):
-    id: str
+    id: int
     product: str
     amount: float
     tenant_id: str
@@ -138,7 +127,7 @@ class OrderOut(BaseModel):
 # Auth endpoints
 # ---------------------------------------------------------------------------
 @app.post("/auth/login", response_model=LoginResponse)
-async def login(body: LoginRequest):
+async def login(body: LoginRequest, db: AsyncSession = Depends(db_dep)):
     """Login with email/password. Returns JWT tokens."""
     # Check brute force
     state = LOGIN_STATES.get(body.email, LoginAttemptState())
@@ -148,8 +137,13 @@ async def login(body: LoginRequest):
             detail="Account temporarily locked due to too many failed attempts",
         )
 
-    user = USERS.get(body.email)
-    if not user or user["password"] != body.password:
+    # Query user from database
+    result = await db.execute(
+        select(User).where(User.email == body.email, User.deleted_at.is_(None))
+    )
+    user = result.scalar_one_or_none()
+
+    if not user or user.password != body.password:
         state = brute_force.record_failed_attempt(state)
         LOGIN_STATES[body.email] = state
         logger.warning("login.failed", email=body.email)
@@ -163,17 +157,17 @@ async def login(body: LoginRequest):
     LOGIN_STATES[body.email] = state
 
     access_token = jwt_manager.create_access_token(
-        user_id=user["user_id"],
-        tenant_id=user["tenant_id"],
-        roles=user["roles"],
-        permissions=user["permissions"],
+        user_id=str(user.id),
+        tenant_id=user.tenant_id,
+        roles=user.get_roles(),
+        permissions=user.get_permissions(),
     )
     refresh_token = jwt_manager.create_refresh_token(
-        user_id=user["user_id"],
-        tenant_id=user["tenant_id"],
+        user_id=str(user.id),
+        tenant_id=user.tenant_id,
     )
 
-    logger.info("login.success", user_id=user["user_id"], tenant=user["tenant_id"])
+    logger.info("login.success", user_id=user.id, tenant=user.tenant_id)
     return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
 
@@ -192,33 +186,71 @@ async def me(user=Depends(get_current_user)):
 
 
 @app.get("/orders", response_model=PaginatedResponse[OrderOut])
-async def list_orders(user=Depends(require_permissions("orders:read"))):
-    """List orders for the current tenant. Simulates RLS filtering."""
-    # Set tenant context (in production, TenantMiddleware does this)
+async def list_orders(
+    user=Depends(require_permissions("orders:read")),
+    db: AsyncSession = Depends(db_dep),
+):
+    """List orders for the current tenant."""
     set_current_tenant(tenant_id=user.tenant_id)
-    tenant = get_current_tenant()
 
-    # Simulate RLS: filter by tenant
-    tenant_orders = ORDERS.get(tenant.tenant_id, [])
-    items = [OrderOut(**o) for o in tenant_orders]
+    result = await db.execute(
+        select(Order).where(Order.tenant_id == user.tenant_id)
+    )
+    orders = result.scalars().all()
+    items = [
+        OrderOut(id=o.id, product=o.product, amount=o.amount, tenant_id=o.tenant_id)
+        for o in orders
+    ]
 
-    logger.info("orders.listed", tenant=tenant.tenant_id, count=len(items))
+    logger.info("orders.listed", tenant=user.tenant_id, count=len(items))
     return PaginatedResponse.create(items=items, total=len(items))
 
 
 @app.get("/admin/users")
-async def admin_users(user=Depends(require_roles("admin"))):
-    """Admin-only: list all users in the tenant."""
-    tenant_users = [
-        {"email": email, "user_id": u["user_id"], "roles": u["roles"]}
-        for email, u in USERS.items()
-        if u["tenant_id"] == user.tenant_id
-    ]
-    return {"users": tenant_users, "tenant": user.tenant_id}
+async def admin_users(
+    user=Depends(require_roles("admin")),
+    db: AsyncSession = Depends(db_dep),
+):
+    """Admin-only: list all active users in the tenant."""
+    result = await db.execute(
+        select(User).where(
+            User.tenant_id == user.tenant_id,
+            User.deleted_at.is_(None),
+        )
+    )
+    users = result.scalars().all()
+    return {
+        "users": [
+            UserOut(
+                id=u.id, email=u.email, name=u.name,
+                tenant_id=u.tenant_id, roles=u.get_roles(),
+            ).model_dump()
+            for u in users
+        ],
+        "tenant": user.tenant_id,
+    }
 
 
 @app.delete("/admin/users/{user_id}")
-async def delete_user(user_id: str, user=Depends(require_permissions("users:delete"))):
-    """Requires users:delete permission."""
-    logger.info("user.deleted", target_user=user_id, by=user.user_id, tenant=user.tenant_id)
-    return {"message": f"User {user_id} deleted (simulated)", "tenant": user.tenant_id}
+async def delete_user(
+    user_id: int,
+    user=Depends(require_permissions("users:delete")),
+    db: AsyncSession = Depends(db_dep),
+):
+    """Soft-delete a user (requires users:delete permission)."""
+    result = await db.execute(
+        select(User).where(
+            User.id == user_id,
+            User.tenant_id == user.tenant_id,
+            User.deleted_at.is_(None),
+        )
+    )
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    target.soft_delete()
+    await db.commit()
+
+    logger.info("user.soft_deleted", target_user=user_id, by=user.user_id, tenant=user.tenant_id)
+    return {"message": f"User {user_id} soft-deleted", "tenant": user.tenant_id}

@@ -1,14 +1,32 @@
 # SaaS Multitenant Example
 
-Full SaaS API example demonstrating all three Python bloques working together:
-- **bloque-core**: Middleware, schemas, structured logging, health check
+Full SaaS API example demonstrating 4 Python bloques working together with a real database:
+
+- **bloque-core**: App factory (`create_app`), middleware, schemas, health check
 - **bloque-auth**: JWT RS256, RBAC, brute force protection
-- **bloque-multitenant**: Tenant context isolation (simulated RLS)
+- **bloque-db**: SQLAlchemy models with composable mixins, async engine, session factory
+- **bloque-multitenant**: Tenant context isolation via contextvars
+
+## How It Works
+
+This example shows how a developer composes bloques into a real application:
+
+1. **Models** (`models.py`): `User(Base, TimestampMixin, SoftDeleteMixin)` and `Order(Base, TimestampMixin)` with FK relationships
+2. **Database** (`database.py`): Engine + session factory via `bloque-db`, zero config with SQLite
+3. **Seed data** (`seed.py`): Demo users and orders for 2 tenants (Acme, Globex)
+4. **App** (`main.py`): FastAPI with JWT auth, RBAC, tenant-filtered DB queries, soft delete
 
 ## Run
 
 ```bash
 cd examples/saas-multitenant
+uv run uvicorn main:app --reload
+```
+
+Uses SQLite by default (creates `demo.db` in current directory). For PostgreSQL:
+
+```bash
+export BLOQUE_DATABASE_URL=postgresql+asyncpg://user:pass@localhost/mydb
 uv run uvicorn main:app --reload
 ```
 
@@ -33,7 +51,7 @@ curl http://localhost:8000/me \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
-### 3. List orders (filtered by tenant)
+### 3. List orders (filtered by tenant from JWT)
 
 ```bash
 curl http://localhost:8000/orders \
@@ -49,14 +67,14 @@ curl http://localhost:8000/admin/users \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
-### 5. Permission-protected endpoint
+### 5. Soft-delete a user (requires users:delete permission)
 
 ```bash
-curl -X DELETE http://localhost:8000/admin/users/user-2 \
+curl -X DELETE http://localhost:8000/admin/users/2 \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
-Only users with `users:delete` permission can access this.
+The user is soft-deleted (deleted_at set, not removed from DB).
 
 ### 6. Brute force protection
 
@@ -70,34 +88,32 @@ Try logging in with wrong password 5 times - the account gets locked for 15 minu
 | user@acme.com | user123 | acme | user | orders:read, orders:write |
 | admin@globex.com | admin123 | globex | admin | users:read, users:write, orders:read |
 
+> Passwords stored in plain text - this is a demo, not production code.
+
 ## Endpoints
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | POST | /auth/login | - | Login with email/password |
-| GET | /me | Bearer | Current user info |
-| GET | /orders | orders:read | List tenant orders |
-| GET | /admin/users | admin role | List tenant users |
-| DELETE | /admin/users/{id} | users:delete | Delete user |
+| GET | /me | Bearer | Current user info from JWT |
+| GET | /orders | orders:read | List tenant orders from DB |
+| GET | /admin/users | admin role | List active tenant users from DB |
+| DELETE | /admin/users/{id} | users:delete | Soft-delete user |
 | GET | /health | - | Health check |
 
-## With Real PostgreSQL RLS
+## With PostgreSQL RLS
 
-For production use with actual PostgreSQL Row-Level Security:
+For production with actual Row-Level Security:
 
 ```python
-from sqlalchemy.ext.asyncio import create_async_engine
-from bloque_multitenant.rls import TenantMiddleware, apply_rls, generate_rls_sql
+from bloque_multitenant.rls import apply_rls, generate_rls_sql
 
-# 1. Generate RLS SQL for your tables
+# 1. Generate and execute RLS SQL in your migration
 sql = generate_rls_sql("orders", tenant_column="tenant_id")
-# Execute this SQL in your migration
 
-# 2. Configure SQLAlchemy
-engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/mydb")
+# 2. Configure SQLAlchemy engine with RLS event listener
 apply_rls(engine)
 
-# 3. Add middleware
+# 3. Add TenantMiddleware - tenant context is now automatic
 app.add_middleware(TenantMiddleware)
-# Tenant context is now automatic - all queries filtered by RLS
 ```
