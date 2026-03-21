@@ -21,7 +21,7 @@ from datetime import date, datetime, time, timedelta, timezone
 
 from typing import Optional
 
-from fastapi import Depends, HTTPException, Query
+from fastapi import Depends, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import select, func
@@ -284,13 +284,15 @@ async def create_appointment(body: AppointmentRequest, db: AsyncSession = Depend
 # ---------------------------------------------------------------------------
 @app.get("/api/appointments")
 async def list_appointments(
-    page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=100),
-    sort: str = Query("id"),
-    order: str = Query("ASC"),
+    request: Request,
     db: AsyncSession = Depends(db_dep),
 ):
     """List appointments with pagination for react-admin."""
+    page = int(request.query_params.get("page", "1"))
+    size = int(request.query_params.get("size", "20"))
+    sort = request.query_params.get("sort", "id")
+    order = request.query_params.get("order", "ASC")
+
     total_result = await db.execute(select(func.count(Appointment.id)))
     total = total_result.scalar() or 0
 
@@ -374,13 +376,15 @@ async def update_appointment(
 
 @app.get("/api/availabilities")
 async def list_availabilities(
-    page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=100),
-    sort: str = Query("id"),
-    order: str = Query("ASC"),
+    request: Request,
     db: AsyncSession = Depends(db_dep),
 ):
     """List availabilities with pagination for react-admin."""
+    page = int(request.query_params.get("page", "1"))
+    size = int(request.query_params.get("size", "20"))
+    sort = request.query_params.get("sort", "id")
+    order = request.query_params.get("order", "ASC")
+
     total_result = await db.execute(select(func.count(Availability.id)))
     total = total_result.scalar() or 0
 

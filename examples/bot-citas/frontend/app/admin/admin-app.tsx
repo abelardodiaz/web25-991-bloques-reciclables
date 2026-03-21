@@ -4,12 +4,13 @@ import { Admin, Resource, ListGuesser, EditGuesser, ShowGuesser } from "react-ad
 import { BloqueClient } from "@ulfblk/api-client";
 import { createDataProvider } from "@ulfblk/admin";
 
-const client = new BloqueClient({ baseUrl: "http://localhost:8000" });
+// Use relative URL so requests go through Next.js (same origin) then proxy to backend
+const client = new BloqueClient({ baseUrl: "" });
 const dataProvider = createDataProvider(client);
 
 export default function AdminApp() {
   return (
-    <Admin dataProvider={dataProvider} basename="/admin">
+    <Admin dataProvider={dataProvider}>
       <Resource
         name="appointments"
         list={ListGuesser}
