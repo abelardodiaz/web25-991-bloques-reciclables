@@ -1,0 +1,19 @@
+[project]
+name = "example-bot-citas"
+version = "0.1.0"
+description = "Bot de citas generico usando 7 bloques ulfblk"
+requires-python = ">=3.11"
+dependencies = [
+    "ulfblk-core",
+    "ulfblk-db",
+    "ulfblk-scheduling",
+    "ulfblk-calendar",
+    "aiosqlite>=0.20",
+    "uvicorn>=0.30",
+]
+
+[tool.uv.sources]
+ulfblk-core = { workspace = true }
+ulfblk-db = { workspace = true }
+ulfblk-scheduling = { workspace = true }
+ulfblk-calendar = { workspace = true }
