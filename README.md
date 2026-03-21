@@ -1,140 +1,116 @@
-# Bloques Reciclables
+# ulfblk
 
-Ecosistema open source de bloques de codigo reciclables. Una caja de legos multi-stack (Python + TypeScript) para construir cualquier tipo de proyecto web/API.
-
-## Bloques Disponibles
-
-### Python (Backend)
-
-| Bloque | Descripcion | Status |
-|--------|-------------|--------|
-| `bloque-core` | Middleware, schemas, logging, health checks | MVP |
-| `bloque-auth` | JWT RS256, RBAC, brute force, credential encryption | MVP |
-| `bloque-multitenant` | PostgreSQL RLS transparente via contextvars | MVP |
-
-### TypeScript (Frontend)
-
-| Bloque | Descripcion | Status |
-|--------|-------------|--------|
-| `@bloque/types` | TypeScript types base (auth, pagination) | Scaffold |
-| `@bloque/ui` | shadcn/ui componentes base | Scaffold |
-| `@bloque/api-client` | Cliente HTTP con interceptors | Scaffold |
-
-## Quick Start
-
-### Prerequisitos
-
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- Node.js 20+
-- [pnpm](https://pnpm.io/) (Node package manager)
-
-### Instalacion
+Composable Python + TypeScript packages for building SaaS applications. Install what you need, skip what you don't.
 
 ```bash
-# Clonar
+uv add ulfblk-core ulfblk-db ulfblk-auth
+```
+
+## Getting Started
+
+```python
+from ulfblk_core import create_app
+from ulfblk_db import Base, TimestampMixin, create_async_engine, create_session_factory
+
+# 1. Create your app (includes middleware, health check, error handling)
+app = create_app(service_name="my-api", version="0.1.0")
+
+# 2. Define your models with composable mixins
+class User(Base, TimestampMixin):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True)
+
+# 3. Run
+# uv run uvicorn main:app --reload
+# -> http://localhost:8000/docs
+```
+
+## Packages
+
+### Python (PyPI)
+
+| Package | Description |
+|---------|-------------|
+| `ulfblk-core` | App factory, middleware, schemas, health checks, logging |
+| `ulfblk-db` | SQLAlchemy async engine, session factory, composable mixins, Alembic migrations |
+| `ulfblk-auth` | JWT RS256, RBAC, brute force protection, credential encryption |
+| `ulfblk-multitenant` | PostgreSQL RLS transparent multitenancy via contextvars |
+| `ulfblk-testing` | Pytest plugin with auto-registered fixtures (JWT, DB, HTTP client) |
+| `ulfblk-redis` | Cache, streams, consumer groups, tenant-aware key prefixing |
+| `ulfblk-gateway` | Rate limiting, reverse proxy, circuit breaker |
+| `ulfblk-channels` | WhatsApp, Telegram, Email webhook handlers |
+| `ulfblk-billing` | Stripe integration (customers, subscriptions, checkout, webhooks) |
+| `ulfblk-notifications` | Email + push + templates |
+| `ulfblk-automation` | Rule engine + condition evaluator |
+| `ulfblk-ai-rag` | ChromaDB + LLM gateway (DeepSeek, OpenAI, Ollama) |
+| `ulfblk-ci-github` | GitHub Actions workflow generator |
+| `ulfblk-ci-gitlab` | GitLab CI pipeline generator |
+| `ulfblk-docker-dev` | Docker Compose for development |
+| `ulfblk-docker-prod` | Docker Compose for production + nginx |
+
+### TypeScript (npm)
+
+| Package | Description |
+|---------|-------------|
+| `@ulfblk/types` | TypeScript types (auth, pagination, entities, tenants) |
+| `@ulfblk/ui` | Tailwind CSS preset + cn() utility + design tokens |
+| `@ulfblk/api-client` | HTTP client with interceptors + token management |
+| `@ulfblk/auth-react` | React hooks + providers + guards for auth |
+| `@ulfblk/dashboard` | Dashboard layout components (sidebar, header, data tables) |
+
+## Examples
+
+| Example | What it demonstrates |
+|---------|---------------------|
+| [SaaS Multitenant](examples/saas-multitenant/) | 4 bloques with real SQLAlchemy DB, JWT auth, tenant isolation |
+| [MVP sin Login](examples/mvp-sin-login/) | Full-stack Next.js + FastAPI, zero auth |
+| [API Simple](examples/api-simple/) | Minimal API with just ulfblk-core |
+
+## Recipes
+
+Step-by-step guides for common use cases:
+
+- [API Simple](docs/recetas/api-simple.md) - FastAPI with health check in 10 lines
+- [SaaS Multitenant](docs/recetas/saas-multitenant.md) - JWT + RBAC + DB + RLS
+- [MVP sin Login](docs/recetas/mvp-sin-login.md) - Quick prototype, no auth
+- [Bot WhatsApp](docs/recetas/bot-whatsapp.md) - Webhook + RAG chatbot
+
+## How It Works
+
+ulfblk packages export infrastructure, not business logic. You compose them:
+
+```python
+from ulfblk_db import Base, TimestampMixin, SoftDeleteMixin
+
+class User(Base, TimestampMixin, SoftDeleteMixin):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True)
+    tenant_id = Column(String, nullable=False)
+    orders = relationship("Order", back_populates="user")
+```
+
+Relationships, business rules, and data models are yours. Bloques provide the plumbing.
+
+## Development
+
+```bash
 git clone https://github.com/abelardodiaz/web25-991-bloques-reciclables.git
 cd web25-991-bloques-reciclables
 
 # Python
 uv sync --all-packages
-
-# TypeScript
-pnpm install
-```
-
-### Correr tests
-
-```bash
-# Python
 uv run pytest
 
 # TypeScript
+pnpm install
 pnpm run build
 ```
 
-### Ejemplo rapido
+## Comparison
 
-```bash
-cd examples/api-simple
-uv run uvicorn main:app --reload
-# Visitar http://localhost:8000/health
-```
-
-## Usar en tu proyecto
-
-```bash
-# Agregar bloque-core a tu proyecto
-uv add bloque-core
-
-# Agregar bloque-auth
-uv add bloque-auth
-```
-
-```python
-from fastapi import FastAPI
-from bloque_core.middleware import RequestIDMiddleware, TimingMiddleware
-from bloque_core.health import health_router
-from bloque_core.logging import setup_logging
-
-app = FastAPI()
-setup_logging()
-app.add_middleware(TimingMiddleware)
-app.add_middleware(RequestIDMiddleware)
-app.include_router(health_router)
-```
-
-## Recetas
-
-Combinaciones de bloques para casos de uso comunes:
-
-- [API Simple](docs/recetas/api-simple.md) - FastAPI basico con core
-- [SaaS Multitenant](docs/recetas/saas-multitenant.md) - API con RLS + auth
-- [MVP sin Login](docs/recetas/mvp-sin-login.md) - Prototipo rapido
-- [Bot WhatsApp](docs/recetas/bot-whatsapp.md) - Webhook + channels
-
-## Arquitectura
-
-```
-web25-991-bloques-reciclables/
-  packages/
-    python/               # uv workspaces
-      bloque-core/        # Middleware, schemas, logging, health
-      bloque-auth/        # JWT, RBAC, brute force, credentials
-      bloque-multitenant/ # PostgreSQL RLS transparente
-    typescript/           # pnpm + Turborepo
-      bloque-ui/          # Componentes UI (futuro)
-      bloque-api-client/  # Cliente HTTP (futuro)
-      bloque-types/       # TypeScript types base
-  templates/              # Copier templates composables
-  examples/               # Proyectos ejemplo
-  docs/                   # Documentacion
-```
-
-## Principios
-
-1. **Cada bloque es independiente.** Sin dependencias circulares.
-2. **bloque-core es el unico obligatorio.** Todo lo demas es opcional.
-3. **Tests en cada bloque.** Cada package tiene sus propios tests.
-4. **Sin secrets.** Repo publico. Nunca hardcodear credenciales.
-5. **Documentar con ejemplos.** Cada bloque tiene README con ejemplo.
-
-## Contributing
-
-1. Fork el repo
-2. Crea un branch (`git checkout -b feat/mi-feature`)
-3. Commit con conventional commits (`feat:`, `fix:`, `docs:`)
-4. Push y abre un PR
-
-## Herramientas
-
-| Herramienta | Proposito |
-|------------|----------|
-| [uv](https://docs.astral.sh/uv/) | Python package management + workspaces |
-| [pnpm](https://pnpm.io/) | Node package management + workspaces |
-| [Turborepo](https://turbo.build/) | Build orchestration TS |
-| [Ruff](https://docs.astral.sh/ruff/) | Python linter + formatter |
-| [pytest](https://pytest.org/) | Python tests |
+See [docs/COMPARATIVA.md](docs/COMPARATIVA.md) for an honest comparison vs Django, Laravel, SaaS Pegasus, ShipFast, Supabase, and create-t3-app.
 
 ## License
 

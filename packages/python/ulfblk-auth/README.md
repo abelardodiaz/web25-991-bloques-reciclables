@@ -112,6 +112,25 @@ new_key = CredentialEncryptor.generate_key()
 re_encrypted = encryptor.rotate_key(encrypted, new_key)
 ```
 
+## Migrating to External Auth
+
+If your project grows and you need enterprise-grade auth (SOC2, SSO, MFA), you can replace JWTManager with an external provider while keeping RBAC:
+
+```python
+# Before: ulfblk-auth JWTManager
+from ulfblk_auth.jwt import JWTManager
+jwt_manager = JWTManager(private_key=PEM, public_key=PEM)
+
+# After: Auth0 / Clerk / Supabase Auth
+# 1. Replace JWTManager with your provider's JWT verification
+# 2. Keep using require_permissions() and require_roles() - they only
+#    need a TokenData object with user_id, tenant_id, roles, permissions
+# 3. Replace configure(jwt_manager) with a custom get_current_user
+#    that validates tokens against your provider's JWKS endpoint
+```
+
+ulfblk-auth is designed for indie devs and startups who need auth fast. When you outgrow it, the migration path is straightforward because RBAC dependencies are decoupled from token creation.
+
 ## Dependencies
 
 - [ulfblk-core](https://github.com/abelardodiaz/web25-991-bloques-reciclables/tree/main/packages/python/ulfblk-core)
