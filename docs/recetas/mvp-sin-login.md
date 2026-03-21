@@ -1,6 +1,6 @@
 # Receta: MVP sin Login
 
-> Con bloque-ui + bloque-api-client tienes un frontend rapido sin autenticacion.
+> Con ulfblk-core + @ulfblk/api-client tienes un fullstack rapido sin autenticacion.
 
 ---
 
@@ -8,55 +8,47 @@
 
 ```bash
 # Backend
-uv add bloque-core
+uv add ulfblk-core
 
 # Frontend
-pnpm add @bloque/ui @bloque/api-client
+pnpm add @ulfblk/ui @ulfblk/api-client
 ```
 
 ## Que obtienes
 
-- Backend FastAPI minimo con health check
-- Frontend Next.js con componentes shadcn/ui
-- Cliente HTTP configurado para hablar con la API
-- Sin auth, sin multitenant - lo minimo para un MVP
+- Backend FastAPI con health check y middleware
+- Frontend con componentes UI y cliente HTTP
+- Sin auth, sin multitenant - lo minimo para validar una idea
 
-## Setup rapido
-
-### Backend
+## Backend
 
 ```python
-from fastapi import FastAPI
-from bloque_core.middleware import RequestIDMiddleware
-from bloque_core.health import health_router
+from ulfblk_core import create_app
 
-app = FastAPI(title="MVP API")
-app.add_middleware(RequestIDMiddleware)
-app.include_router(health_router)
+app = create_app(service_name="mvp", version="0.1.0", title="MVP API")
 
 @app.get("/api/data")
 async def get_data():
     return {"items": ["uno", "dos", "tres"]}
 ```
 
-### Frontend
+## Frontend
 
 ```tsx
-import { ApiClient } from '@bloque/api-client'
-import { Card, Button } from '@bloque/ui'
+import { ApiClient } from "@ulfblk/api-client";
 
-const api = new ApiClient({ baseURL: 'http://localhost:8000' })
+const api = new ApiClient({ baseURL: "http://localhost:8000" });
 
 export default async function Page() {
-  const { data } = await api.get('/api/data')
+  const { data } = await api.get("/api/data");
 
   return (
-    <div>
+    <ul>
       {data.items.map((item: string) => (
-        <Card key={item}>{item}</Card>
+        <li key={item}>{item}</li>
       ))}
-    </div>
-  )
+    </ul>
+  );
 }
 ```
 
@@ -64,8 +56,9 @@ export default async function Page() {
 
 Cuando el MVP valide la idea, agregar bloques incrementalmente:
 
-1. Necesitas login? -> `uv add bloque-auth` + `pnpm add @bloque/auth-react`
-2. Necesitas multi-inquilino? -> `uv add bloque-multitenant`
-3. Necesitas dashboard completo? -> `pnpm add @bloque/dashboard`
+1. Necesitas login? -> `uv add ulfblk-auth` + `pnpm add @ulfblk/auth-react`
+2. Necesitas base de datos? -> `uv add ulfblk-db`
+3. Necesitas multi-inquilino? -> `uv add ulfblk-multitenant`
+4. Necesitas dashboard? -> `pnpm add @ulfblk/dashboard`
 
 Los bloques se agregan sin reescribir lo existente.

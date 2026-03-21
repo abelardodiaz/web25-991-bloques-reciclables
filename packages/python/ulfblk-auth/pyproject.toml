@@ -1,6 +1,6 @@
 [project]
 name = "ulfblk-auth"
-version = "0.1.0"
+version = "0.1.1"
 description = "Authentication and authorization: JWT RS256, RBAC, brute force protection, credential encryption"
 readme = "README.md"
 license = "MIT"

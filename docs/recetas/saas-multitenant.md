@@ -1,85 +1,102 @@
 # Receta: SaaS Multitenant
 
-> Con bloque-core + bloque-auth + bloque-multitenant construyes un SaaS completo.
+> Con ulfblk-core + ulfblk-auth + ulfblk-db + ulfblk-multitenant construyes un SaaS completo.
 
 ---
 
 ## Bloques necesarios
 
 ```bash
-uv add bloque-core bloque-auth bloque-multitenant
+uv add ulfblk-core ulfblk-auth ulfblk-db ulfblk-multitenant aiosqlite
 ```
 
 ## Que obtienes
 
-- API FastAPI con middleware stack completo (request ID, timing, auth)
+- API FastAPI con `create_app()` factory
 - JWT RS256 con tenant_id y roles en payload
-- RBAC granular con dependencias FastAPI
+- RBAC granular con `require_permissions()` y `require_roles()`
 - Proteccion brute force en login
-- PostgreSQL RLS transparente (el developer nunca escribe codigo multitenant)
-- TenantCredential para almacenar API keys por tenant (Fernet AES-256)
-- Health checks y logging estructurado
+- SQLAlchemy async con mixins composables (TimestampMixin, SoftDeleteMixin)
+- Tenant context via contextvars (async-safe)
+- PostgreSQL RLS transparente (opcional, para produccion)
+- SQLite zero-config para desarrollo
+
+## Ejemplo completo
+
+Ver `examples/saas-multitenant/` para el ejemplo funcional con:
+- `models.py` - User y Order con mixins composables
+- `database.py` - Engine + session factory via ulfblk-db
+- `seed.py` - Datos demo para 2 tenants
+- `main.py` - App completa con login, RBAC, tenant filtering
 
 ## Setup rapido
 
 ```python
-from fastapi import FastAPI
-from bloque_core.middleware import RequestIDMiddleware, TimingMiddleware
-from bloque_core.health import health_router
-from bloque_core.logging import setup_logging
-from bloque_auth.jwt import JWTManager
-from bloque_auth.rbac import require_permission
-from bloque_multitenant.rls import RLSMiddleware
-from bloque_multitenant.context import TenantContext
+from ulfblk_core import create_app, get_logger, setup_logging
+from ulfblk_auth.jwt import JWTManager
+from ulfblk_auth.rbac.permissions import configure, get_current_user, require_permissions
+from ulfblk_db import Base, TimestampMixin, create_async_engine, create_session_factory, get_db_session, DatabaseSettings
+from ulfblk_multitenant.context import set_current_tenant
+from fastapi import Depends
+from sqlalchemy import Column, Integer, String, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-app = FastAPI(title="Mi SaaS Multitenant")
+# Modelos (TU defines tus modelos, no los bloques)
+class User(Base, TimestampMixin):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True)
+    tenant_id = Column(String, nullable=False)
+
+# Setup
 setup_logging()
+jwt_manager = JWTManager(private_key=PRIVATE_PEM, public_key=PUBLIC_PEM)
+configure(jwt_manager)
 
-# Middleware stack (orden importa)
-app.add_middleware(RLSMiddleware)         # 3. Inyecta SET LOCAL
-app.add_middleware(JWTManager.middleware)  # 2. Extrae tenant_id del JWT
-app.add_middleware(RequestIDMiddleware)    # 1. Genera request ID
-app.add_middleware(TimingMiddleware)
+settings = DatabaseSettings(database_url="sqlite+aiosqlite:///./app.db")
+engine = create_async_engine(settings)
+SessionLocal = create_session_factory(engine)
+db_dep = get_db_session(SessionLocal)
 
-app.include_router(health_router)
+app = create_app(service_name="mi-saas", version="0.1.0")
 
 @app.get("/users")
 async def list_users(
-    db: AsyncSession = Depends(get_db),
-    _: None = Depends(require_permission("users:read"))
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(db_dep),
 ):
-    # RLS filtra automaticamente por tenant
-    return await db.execute(select(User))
+    set_current_tenant(tenant_id=user.tenant_id)
+    result = await db.execute(
+        select(User).where(User.tenant_id == user.tenant_id)
+    )
+    return {"users": [{"id": u.id, "email": u.email} for u in result.scalars()]}
 ```
 
-## Base de datos
+## Con PostgreSQL RLS (produccion)
 
-```sql
--- Ejecutar una vez al crear la BD
--- bloque-multitenant provee script de setup
+```python
+from ulfblk_multitenant.rls import apply_rls, generate_rls_sql
 
--- 1. Habilitar RLS en cada tabla
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+# 1. Generar SQL para RLS (ejecutar en migracion)
+sql = generate_rls_sql("users", tenant_column="tenant_id")
 
--- 2. Crear policy
-CREATE POLICY tenant_isolation ON users
-    USING (tenant_id = current_setting('app.current_tenant')::uuid);
+# 2. Configurar engine con event listener
+apply_rls(engine)
 
--- 3. Default deny si no hay tenant
-ALTER TABLE users FORCE ROW LEVEL SECURITY;
+# 3. Agregar middleware de tenant
+from ulfblk_multitenant.rls import TenantMiddleware
+app.add_middleware(TenantMiddleware)
+# Ahora las queries se filtran automaticamente por tenant
 ```
 
 ## Frontend (opcional)
 
 ```bash
-pnpm add @bloque/ui @bloque/api-client @bloque/auth-react
+pnpm add @ulfblk/ui @ulfblk/api-client @ulfblk/auth-react
 ```
-
-Agrega login, tenant selector, y dashboard basico.
 
 ## Siguiente paso
 
-Agregar mas bloques segun necesidad:
-- `bloque-redis` para cache y event streaming
-- `bloque-notifications` para emails y push
-- `bloque-billing` para pagos con Stripe
+- `ulfblk-redis` para cache y event streaming
+- `ulfblk-notifications` para emails y push
+- `ulfblk-billing` para pagos con Stripe

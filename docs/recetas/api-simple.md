@@ -1,43 +1,44 @@
 # Receta: API Simple
 
-> Con solo bloque-core tienes una API lista en minutos.
+> Con solo ulfblk-core tienes una API lista en minutos.
 
 ---
 
 ## Bloques necesarios
 
 ```bash
-uv add bloque-core
+uv add ulfblk-core
 ```
 
 ## Que obtienes
 
-- FastAPI con middleware stack (request ID, timing)
+- FastAPI con `create_app()` factory (middleware, health, exception handlers)
 - Health check endpoint (/health)
 - Logging estructurado con structlog
-- Schemas base (PaginatedResponse, ErrorResponse)
-- Listo para agregar mas bloques despues
+- Schemas base (PaginatedResponse, ErrorResponse, HealthResponse)
+- Request ID y timing headers automaticos
 
 ## Setup rapido
 
 ```python
-from fastapi import FastAPI
-from bloque_core.middleware import RequestIDMiddleware, TimingMiddleware
-from bloque_core.health import health_router
-from bloque_core.logging import setup_logging
-from bloque_core.schemas import PaginatedResponse
+from ulfblk_core import create_app, get_logger, setup_logging
+from ulfblk_core.schemas import PaginatedResponse
 
-app = FastAPI(title="Mi API")
 setup_logging()
-app.add_middleware(RequestIDMiddleware)
-app.add_middleware(TimingMiddleware)
-app.include_router(health_router)
+logger = get_logger(__name__)
+
+app = create_app(
+    service_name="mi-api",
+    version="0.1.0",
+    title="Mi API",
+)
 
 @app.get("/items", response_model=PaginatedResponse[dict])
 async def list_items(page: int = 1, size: int = 20):
     items = [{"id": i, "name": f"Item {i}"} for i in range(1, 21)]
-    return PaginatedResponse(
-        items=items[(page-1)*size : page*size],
+    start = (page - 1) * size
+    return PaginatedResponse.create(
+        items=items[start : start + size],
         total=len(items),
         page=page,
         size=size,
@@ -52,9 +53,17 @@ uv run uvicorn main:app --reload
 # -> http://localhost:8000/health
 ```
 
+## Que incluye create_app()
+
+- RequestIDMiddleware (X-Request-ID header)
+- TimingMiddleware (X-Process-Time header)
+- Global exception handlers (HTTP, validation, generic -> ErrorResponse)
+- Health router (/health)
+
 ## Siguiente paso
 
 Agregar bloques segun necesidad:
-- `bloque-auth` para autenticacion JWT
-- `bloque-multitenant` para soporte multi-inquilino
-- `bloque-redis` para cache
+- `ulfblk-auth` para autenticacion JWT
+- `ulfblk-db` para base de datos con SQLAlchemy
+- `ulfblk-multitenant` para soporte multi-inquilino
+- `ulfblk-redis` para cache
