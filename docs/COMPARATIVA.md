@@ -56,6 +56,6 @@ SQLite por defecto (sin instalar PostgreSQL). Cambia a PostgreSQL con un env var
 
 1. **Ecosistema joven**: no tiene la madurez de Django (20 anios) o Laravel (12 anios)
 2. ~~Sin migraciones automaticas~~: Resuelto - `ulfblk-db[migrations]` integra Alembic con CLI y templates async-ready
-3. **Sin admin panel**: Django tiene django-admin built-in, ulfblk no
+3. ~~Sin admin panel~~: Resuelto - `@ulfblk/admin` provee DataProvider + AuthProvider para react-admin
 4. **Comunidad pequena**: sin Stack Overflow threads, sin tutoriales de terceros todavia
 5. **Solo Python + TypeScript**: si necesitas Go, Rust, Java - no es para ti

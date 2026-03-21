@@ -58,6 +58,7 @@ class User(Base, TimestampMixin):
 | `@ulfblk/api-client` | HTTP client with interceptors + token management |
 | `@ulfblk/auth-react` | React hooks + providers + guards for auth |
 | `@ulfblk/dashboard` | Dashboard layout components (sidebar, header, data tables) |
+| `@ulfblk/admin` | React Admin DataProvider + AuthProvider for CRUD admin panels |
 
 ## Examples
 

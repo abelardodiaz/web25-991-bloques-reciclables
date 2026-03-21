@@ -1,0 +1,50 @@
+{
+  "name": "@ulfblk/admin",
+  "version": "0.1.0",
+  "description": "React Admin DataProvider and AuthProvider for the ulfblk ecosystem",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abelardodiaz/web25-991-bloques-reciclables",
+    "directory": "packages/typescript/ulfblk-admin"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "lint": "biome check src/",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ulfblk/api-client": "^0.1.0",
+    "@ulfblk/types": "^0.1.0",
+    "qs": "^6.14.0"
+  },
+  "devDependencies": {
+    "@types/qs": "^6.9.0",
+    "jwt-decode": "^4.0.0",
+    "react-admin": "^5.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "peerDependencies": {
+    "react-admin": "^5.0.0",
+    "react": "^18 || ^19"
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "keywords": ["react-admin", "admin", "data-provider", "auth-provider", "ulfblk", "saas"]
+}
