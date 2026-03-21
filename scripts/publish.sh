@@ -6,22 +6,38 @@
 
 set -euo pipefail
 
-if [ -z "${UV_PUBLISH_TOKEN:-}" ]; then
-  echo "ERROR: UV_PUBLISH_TOKEN not set"
-  echo "Usage: UV_PUBLISH_TOKEN=pypi-xxx bash scripts/publish.sh"
-  exit 1
-fi
-
 BASE="$(cd "$(dirname "$0")/.." && pwd)"
 PACKAGES_DIR="$BASE/packages/python"
 
-# Topological order: core first, then packages that depend on core
+# Load token from .env if not set
+if [ -z "${UV_PUBLISH_TOKEN:-}" ] && [ -f "$BASE/.env" ]; then
+  UV_PUBLISH_TOKEN=$(grep UV_PUBLISH_TOKEN "$BASE/.env" 2>/dev/null | cut -d= -f2 || true)
+  export UV_PUBLISH_TOKEN
+fi
+
+if [ -z "${UV_PUBLISH_TOKEN:-}" ]; then
+  echo "ERROR: UV_PUBLISH_TOKEN not set (check .env or environment)"
+  exit 1
+fi
+
+# Topological order: core first, then deps, then everything else
 PACKAGES=(
   "ulfblk-core"
   "ulfblk-db"
   "ulfblk-auth"
   "ulfblk-multitenant"
   "ulfblk-testing"
+  "ulfblk-redis"
+  "ulfblk-gateway"
+  "ulfblk-channels"
+  "ulfblk-billing"
+  "ulfblk-notifications"
+  "ulfblk-automation"
+  "ulfblk-ai-rag"
+  "ulfblk-ci-github"
+  "ulfblk-ci-gitlab"
+  "ulfblk-docker-dev"
+  "ulfblk-docker-prod"
 )
 
 echo "Publishing ${#PACKAGES[@]} packages to PyPI..."
