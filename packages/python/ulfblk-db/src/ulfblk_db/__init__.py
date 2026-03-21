@@ -20,3 +20,10 @@ __all__ = [
     "db_health_check",
     "get_db_session",
 ]
+
+
+def __getattr__(name: str):
+    if name in ("MigrationSettings", "init_migrations", "create_migration", "run_upgrade", "run_downgrade"):
+        from .migrations import MigrationSettings, init_migrations, create_migration, run_upgrade, run_downgrade
+        return locals()[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

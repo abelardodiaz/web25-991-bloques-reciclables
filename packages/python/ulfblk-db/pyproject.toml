@@ -30,7 +30,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-asyncio>=0.24", "aiosqlite>=0.20"]
+migrations = ["alembic>=1.13"]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.24", "aiosqlite>=0.20", "alembic>=1.13"]
 
 [project.urls]
 Homepage = "https://github.com/abelardodiaz/web25-991-bloques-reciclables"
