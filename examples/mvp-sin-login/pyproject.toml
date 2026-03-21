@@ -1,0 +1,12 @@
+[project]
+name = "example-mvp-sin-login"
+version = "0.1.0"
+description = "MVP sin Login example - FastAPI backend + React frontend"
+requires-python = ">=3.11"
+dependencies = [
+    "ulfblk-core",
+    "uvicorn>=0.30",
+]
+
+[tool.uv.sources]
+ulfblk-core = { workspace = true }

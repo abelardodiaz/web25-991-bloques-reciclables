@@ -1,6 +1,6 @@
 {
   "name": "@ulfblk/dashboard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React dashboard layout components - sidebar, header, data tables, navigation",
   "type": "module",
   "main": "dist/index.js",
@@ -22,8 +22,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ulfblk/ui": "workspace:*",
-    "@ulfblk/types": "workspace:*"
+    "@ulfblk/ui": "^0.1.0",
+    "@ulfblk/types": "^0.1.0"
   },
   "peerDependencies": {
     "react": "^18 || ^19",
@@ -43,8 +43,8 @@
     }
   },
   "devDependencies": {
-    "@ulfblk/auth-react": "workspace:*",
-    "@ulfblk/api-client": "workspace:*",
+    "@ulfblk/auth-react": "^0.1.0",
+    "@ulfblk/api-client": "^0.1.0",
     "@testing-library/react": "^16.1.0",
     "@types/react": "^19.0.0",
     "jsdom": "^25.0.0",

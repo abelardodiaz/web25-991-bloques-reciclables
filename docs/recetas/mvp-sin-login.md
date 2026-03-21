@@ -35,16 +35,20 @@ async def get_data():
 ## Frontend
 
 ```tsx
-import { ApiClient } from "@ulfblk/api-client";
+import { BloqueClient } from "@ulfblk/api-client";
 
-const api = new ApiClient({ baseURL: "http://localhost:8000" });
+const api = new BloqueClient({ baseUrl: "http://localhost:8000" });
+
+interface DataResponse {
+  items: string[];
+}
 
 export default async function Page() {
-  const { data } = await api.get("/api/data");
+  const response = await api.get<DataResponse>("/api/data");
 
   return (
     <ul>
-      {data.items.map((item: string) => (
+      {response.items.map((item: string) => (
         <li key={item}>{item}</li>
       ))}
     </ul>

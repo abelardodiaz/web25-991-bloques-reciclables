@@ -1,6 +1,6 @@
 {
   "name": "@ulfblk/auth-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React hooks, providers, and guards for Bloque authentication",
   "license": "MIT",
   "type": "module",
@@ -19,8 +19,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ulfblk/types": "workspace:*",
-    "@ulfblk/api-client": "workspace:*"
+    "@ulfblk/types": "^0.1.0",
+    "@ulfblk/api-client": "^0.1.0"
   },
   "peerDependencies": {
     "react": "^18 || ^19",

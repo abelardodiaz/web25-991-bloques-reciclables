@@ -1,6 +1,6 @@
 {
   "name": "@ulfblk/api-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "HTTP API client with interceptors and token management",
   "license": "MIT",
   "repository": {
@@ -24,7 +24,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ulfblk/types": "workspace:*"
+    "@ulfblk/types": "^0.1.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

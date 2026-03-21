@@ -1,0 +1,17 @@
+{
+  "name": "mvp-sin-login-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ulfblk/api-client": "^0.1.0",
+    "@ulfblk/ui": "^0.1.0",
+    "react": "^19.0.0",
+    "@types/react": "^19.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
