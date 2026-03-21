@@ -40,7 +40,7 @@ export default function Page() {
       </ul>
       <hr style={{ margin: "2rem 0" }} />
       <p style={{ color: "#666" }}>
-        Backend: ulfblk-core | Frontend: Next.js + @ulfblk/api-client
+        Backend: ulfblk-core | Frontend: Next.js 16 + @ulfblk/api-client
       </p>
     </main>
   );
