@@ -41,7 +41,7 @@ async def list_items(page: int = 1, size: int = 20):
         items=items[start : start + size],
         total=len(items),
         page=page,
-        size=size,
+        page_size=size,
     )
 ```
 
