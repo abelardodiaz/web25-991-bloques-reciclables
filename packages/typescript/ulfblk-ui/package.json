@@ -1,0 +1,43 @@
+{
+  "name": "@ulfblk/ui",
+  "version": "0.1.0",
+  "description": "Tailwind CSS preset and utilities for the Bloque design system",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abelardodiaz/web25-991-bloques-reciclables",
+    "directory": "packages/typescript/bloque-ui"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "lint": "biome check src/",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^3.0.0"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
