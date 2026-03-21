@@ -1,11 +1,14 @@
 """Rate limiter configuration."""
 
-from dataclasses import dataclass, field
+from bloque_core import BloqueSettings
+from pydantic_settings import SettingsConfigDict
 
 
-@dataclass
-class RateLimiterSettings:
+class RateLimiterSettings(BloqueSettings):
     """Configuration for rate limiting behavior.
+
+    Reads from environment variables with prefix BLOQUE_RATE_LIMITER_.
+    Example: BLOQUE_RATE_LIMITER_REQUESTS=200
 
     Args:
         requests: Maximum number of requests allowed per window.
@@ -17,9 +20,16 @@ class RateLimiterSettings:
         exclude_paths: List of path prefixes to exclude from rate limiting.
     """
 
+    model_config = SettingsConfigDict(
+        env_prefix="BLOQUE_RATE_LIMITER_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
     requests: int = 100
     window_seconds: int = 60
     key_prefix: str = "ratelimit"
     tenant_aware: bool = False
     headers_enabled: bool = True
-    exclude_paths: list[str] = field(default_factory=list)
+    exclude_paths: list[str] = []

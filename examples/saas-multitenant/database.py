@@ -6,8 +6,6 @@ Uses SQLite by default (zero config). Override with env var:
 
 from __future__ import annotations
 
-import os
-
 from bloque_db import (
     DatabaseSettings,
     create_async_engine,
@@ -17,11 +15,9 @@ from bloque_db import (
 
 from models import Base
 
-# SQLite file in current directory by default
-_default_url = "sqlite+aiosqlite:///./demo.db"
-_url = os.environ.get("BLOQUE_DATABASE_URL", _default_url)
-
-settings = DatabaseSettings(database_url=_url)
+# DatabaseSettings reads BLOQUE_DATABASE_URL from env automatically.
+# Default: SQLite file in current directory (zero config).
+settings = DatabaseSettings(database_url="sqlite+aiosqlite:///./demo.db")
 engine = create_async_engine(settings)
 SessionLocal = create_session_factory(engine)
 db_dep = get_db_session(SessionLocal)

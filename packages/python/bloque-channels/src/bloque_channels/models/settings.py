@@ -1,13 +1,24 @@
-"""Settings dataclasses for each channel."""
+"""Settings for each channel."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from bloque_core import BloqueSettings
+from pydantic_settings import SettingsConfigDict
 
 
-@dataclass
-class WhatsAppSettings:
-    """Configuration for WhatsApp Meta Cloud API."""
+class WhatsAppSettings(BloqueSettings):
+    """Configuration for WhatsApp Meta Cloud API.
+
+    Reads from environment variables with prefix BLOQUE_WHATSAPP_.
+    Example: BLOQUE_WHATSAPP_API_TOKEN=your_token
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="BLOQUE_WHATSAPP_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     api_token: str = ""
     verify_token: str = ""
@@ -16,18 +27,38 @@ class WhatsAppSettings:
     api_base_url: str = "https://graph.facebook.com"
 
 
-@dataclass
-class TelegramSettings:
-    """Configuration for Telegram Bot API."""
+class TelegramSettings(BloqueSettings):
+    """Configuration for Telegram Bot API.
+
+    Reads from environment variables with prefix BLOQUE_TELEGRAM_.
+    Example: BLOQUE_TELEGRAM_BOT_TOKEN=123:ABC
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="BLOQUE_TELEGRAM_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     bot_token: str = ""
     secret_token: str | None = None
     api_base_url: str = "https://api.telegram.org"
 
 
-@dataclass
-class EmailSettings:
-    """Configuration for email (SMTP outbound + webhook inbound)."""
+class EmailSettings(BloqueSettings):
+    """Configuration for email (SMTP outbound + webhook inbound).
+
+    Reads from environment variables with prefix BLOQUE_EMAIL_.
+    Example: BLOQUE_EMAIL_SMTP_HOST=smtp.gmail.com
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="BLOQUE_EMAIL_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     smtp_host: str = "localhost"
     smtp_port: int = 587

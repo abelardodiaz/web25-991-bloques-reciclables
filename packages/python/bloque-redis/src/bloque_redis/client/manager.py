@@ -2,18 +2,30 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Self
 
 from bloque_core.logging import get_logger
+from pydantic_settings import SettingsConfigDict
 from redis.asyncio import ConnectionPool, Redis
+
+from bloque_core import BloqueSettings
 
 logger = get_logger(__name__)
 
 
-@dataclass
-class RedisSettings:
-    """Configuration for Redis connection."""
+class RedisSettings(BloqueSettings):
+    """Configuration for Redis connection.
+
+    Reads from environment variables with prefix BLOQUE_REDIS_.
+    Example: BLOQUE_REDIS_URL=redis://custom:6380/1
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="BLOQUE_REDIS_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     url: str = "redis://localhost:6379/0"
     max_connections: int = 10
