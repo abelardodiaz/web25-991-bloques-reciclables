@@ -16,6 +16,18 @@
 | **Precio** | Gratis (MIT) | Gratis | Gratis | $249+ USD | $179+ USD | Free tier + pago | Gratis |
 | **Tests incluidos** | Si (pytest plugin) | Si (TestCase) | Si (PHPUnit) | Si | Parcial | No | No |
 
+## vs Ecosistemas FastAPI Existentes
+
+| Proyecto | Que cubre | Stars | Diferencia con ulfblk |
+|----------|-----------|-------|----------------------|
+| **FastAPI Users** | Solo auth (registro, login, OAuth2, JWT) | ~4.5k | Solo auth. ulfblk cubre 17 areas |
+| **SQLModel** | Solo ORM (Pydantic + SQLAlchemy) | ~12k | Solo DB. No tiene auth, multitenancy, testing, billing |
+| **Piccolo** | ORM + Admin + Auth (paquetes separados) | ~1.5k | ORM propietario. ulfblk usa SQLAlchemy estandar |
+| **full-stack-fastapi-template** | Template con estructura sugerida | ~14k | Template que copias, no paquetes pip actualizables |
+| **ulfblk** | Auth + DB + Multitenancy + Billing + Testing + 12 mas | 17 paquetes | Unico ecosistema composable completo para FastAPI |
+
+**Hallazgo clave:** No existe un paquete de multitenancy con PostgreSQL RLS para FastAPI. `django-tenants` lo resuelve para Django, Supabase lo tiene en su plataforma, pero para FastAPI puro nadie lo ofrece excepto ulfblk.
+
 ## Killer Features de ulfblk
 
 ### 1. Mixins Composables
