@@ -25,8 +25,8 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     # Tu modelo, tus campos, tus relaciones
 ```
 
-### 2. RLS Transparente
-Multitenancy via PostgreSQL Row-Level Security. El developer nunca escribe `WHERE tenant_id = ...` - la DB lo filtra automaticamente.
+### 2. RLS Transparente (PostgreSQL)
+Multitenancy via PostgreSQL Row-Level Security. Con PostgreSQL + `apply_rls(engine)`, la DB filtra automaticamente por tenant. Con SQLite (desarrollo), el filtro es manual en las queries. El ejemplo usa SQLite por zero-config.
 
 ### 3. Pytest Plugin Auto-register
 `uv add --dev ulfblk-testing` y las fixtures estan disponibles sin configurar nada. JWT test tokens, HTTP clients autenticados, DB in-memory.

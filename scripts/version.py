@@ -207,6 +207,61 @@ def update_changelog_file(pkg_name: str, entry: str) -> None:
     )
 
 
+def get_package_dependencies(pkg_name: str) -> list[str]:
+    """Read dependencies from pyproject.toml and return ulfblk package names."""
+    toml_path = PACKAGES_DIR / pkg_name / "pyproject.toml"
+    content = toml_path.read_text(encoding="utf-8")
+    deps = []
+    in_deps = False
+    for line in content.split("\n"):
+        if line.strip() == "dependencies = [":
+            in_deps = True
+            continue
+        if in_deps:
+            if line.strip() == "]":
+                break
+            # Extract package name from '"ulfblk-core",' or '"ulfblk-core>=0.1.0",'
+            match = re.search(r'"(ulfblk-[a-z0-9-]+)', line)
+            if match:
+                deps.append(match.group(1))
+    return deps
+
+
+def update_dependents(bumped: dict[str, dict]) -> list[str]:
+    """Update pyproject.toml of packages that depend on bumped packages.
+
+    When ulfblk-core bumps to 0.2.0, packages depending on it get their
+    dependency updated to ulfblk-core>=0.2.0.
+
+    Returns list of packages that were updated.
+    """
+    all_packages = get_all_packages()
+    updated = []
+
+    for pkg_name in all_packages:
+        if pkg_name in bumped:
+            continue  # Already being bumped
+
+        toml_path = PACKAGES_DIR / pkg_name / "pyproject.toml"
+        content = toml_path.read_text(encoding="utf-8")
+        original = content
+
+        for bumped_name, info in bumped.items():
+            new_ver = info["new"]
+            # Replace any existing version constraint
+            # "ulfblk-core" -> "ulfblk-core>=0.2.0"
+            # "ulfblk-core>=0.1.0" -> "ulfblk-core>=0.2.0"
+            pattern = rf'"{re.escape(bumped_name)}[^"]*"'
+            replacement = f'"{bumped_name}>={new_ver}"'
+            content = re.sub(pattern, replacement, content)
+
+        if content != original:
+            toml_path.write_text(content, encoding="utf-8")
+            updated.append(pkg_name)
+
+    return updated
+
+
 def detect(packages: list[str], since_ref: str | None) -> dict[str, dict]:
     """Detect which packages need version bumps."""
     changed_files = get_changed_files(since_ref)
@@ -278,6 +333,10 @@ def main():
             changelog_entry = generate_changelog(pkg_name, info["new"], info["commits"])
             update_changelog_file(pkg_name, changelog_entry)
             print(f"  {pkg_name}: {info['current']} -> {info['new']} (changelog updated)")
+        # Update dependent packages
+        updated_deps = update_dependents(results)
+        if updated_deps:
+            print(f"\n  Updated dependencies in: {', '.join(updated_deps)}")
         print("\nDone. Review changes, then commit and run --tag.")
 
     if args.tag:

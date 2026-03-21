@@ -1,7 +1,7 @@
 """Seed demo data into the database.
 
 Idempotent: skips if users already exist.
-Passwords are stored in plain text - this is a demo, not production code.
+Passwords are hashed with SHA-256 + salt.
 """
 
 from __future__ import annotations
@@ -14,6 +14,21 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from models import Order, User
 
 
+def _create_user(email: str, name: str, password: str, tenant_id: str,
+                 roles: list[str], permissions: list[str]) -> User:
+    """Create a User with hashed password."""
+    user = User(
+        email=email,
+        name=name,
+        password_hash="",
+        tenant_id=tenant_id,
+        roles_json=json.dumps(roles),
+        permissions_json=json.dumps(permissions),
+    )
+    user.set_password(password)
+    return user
+
+
 async def seed_data(session_factory: async_sessionmaker) -> None:
     """Insert demo users and orders if the database is empty."""
     async with session_factory() as session:
@@ -22,34 +37,20 @@ async def seed_data(session_factory: async_sessionmaker) -> None:
             return  # Already seeded
 
         users = [
-            User(
-                email="admin@acme.com",
-                name="Alice Admin",
-                password="admin123",
-                tenant_id="acme",
-                roles_json=json.dumps(["admin"]),
-                permissions_json=json.dumps([
-                    "users:read", "users:write", "users:delete",
-                    "orders:read", "orders:write",
-                ]),
+            _create_user(
+                "admin@acme.com", "Alice Admin", "admin123", "acme",
+                ["admin"],
+                ["users:read", "users:write", "users:delete", "orders:read", "orders:write"],
             ),
-            User(
-                email="user@acme.com",
-                name="Bob User",
-                password="user123",
-                tenant_id="acme",
-                roles_json=json.dumps(["user"]),
-                permissions_json=json.dumps(["orders:read", "orders:write"]),
+            _create_user(
+                "user@acme.com", "Bob User", "user123", "acme",
+                ["user"],
+                ["orders:read", "orders:write"],
             ),
-            User(
-                email="admin@globex.com",
-                name="Carol Admin",
-                password="admin123",
-                tenant_id="globex",
-                roles_json=json.dumps(["admin"]),
-                permissions_json=json.dumps([
-                    "users:read", "users:write", "orders:read",
-                ]),
+            _create_user(
+                "admin@globex.com", "Carol Admin", "admin123", "globex",
+                ["admin"],
+                ["users:read", "users:write", "orders:read"],
             ),
         ]
         session.add_all(users)

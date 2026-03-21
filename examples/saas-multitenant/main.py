@@ -68,6 +68,10 @@ jwt_manager = JWTManager(
 configure(jwt_manager)
 
 brute_force = BruteForceProtection(max_attempts=5, lockout_minutes=15)
+# NOTE: In-memory dict - works for single-worker dev mode only.
+# For production with multiple workers, use Redis (ulfblk-redis).
+# Entries are cleaned up when they exceed MAX_LOGIN_STATES.
+MAX_LOGIN_STATES = 1000
 LOGIN_STATES: dict[str, LoginAttemptState] = {}
 
 
@@ -129,6 +133,10 @@ class OrderOut(BaseModel):
 @app.post("/auth/login", response_model=LoginResponse)
 async def login(body: LoginRequest, db: AsyncSession = Depends(db_dep)):
     """Login with email/password. Returns JWT tokens."""
+    # Prevent unbounded growth of in-memory state
+    if len(LOGIN_STATES) > MAX_LOGIN_STATES:
+        LOGIN_STATES.clear()
+
     # Check brute force
     state = LOGIN_STATES.get(body.email, LoginAttemptState())
     if brute_force.is_locked(state):
@@ -143,7 +151,7 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(db_dep)):
     )
     user = result.scalar_one_or_none()
 
-    if not user or user.password != body.password:
+    if not user or not user.check_password(body.password):
         state = brute_force.record_failed_attempt(state)
         LOGIN_STATES[body.email] = state
         logger.warning("login.failed", email=body.email)

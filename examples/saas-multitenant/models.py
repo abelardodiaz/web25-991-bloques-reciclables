@@ -7,7 +7,9 @@ into application-specific models with their own fields and relationships.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import secrets
 
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, relationship
@@ -23,12 +25,25 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String(255), unique=True, nullable=False)
     name = Column(String(255), nullable=False)
-    password = Column(String(255), nullable=False)  # plain text - demo only
+    password_hash = Column(String(255), nullable=False)
     tenant_id = Column(String(100), nullable=False, index=True)
     roles_json = Column(String(1000), nullable=False, default="[]")
     permissions_json = Column(String(2000), nullable=False, default="[]")
 
     orders: Mapped[list[Order]] = relationship("Order", back_populates="user")
+
+    def set_password(self, password: str) -> None:
+        """Hash password with salt using SHA-256."""
+        salt = secrets.token_hex(16)
+        hashed = hashlib.sha256(f"{salt}{password}".encode()).hexdigest()
+        self.password_hash = f"{salt}:{hashed}"
+
+    def check_password(self, password: str) -> bool:
+        """Verify password against stored hash."""
+        if ":" not in self.password_hash:
+            return False
+        salt, stored_hash = self.password_hash.split(":", 1)
+        return hashlib.sha256(f"{salt}{password}".encode()).hexdigest() == stored_hash
 
     def get_roles(self) -> list[str]:
         """Parse roles from JSON string."""
