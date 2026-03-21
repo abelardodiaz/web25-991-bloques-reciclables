@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
-cd "$(dirname "$0")"
-echo "Starting bot-citas on :8000..."
-uv run uvicorn main:app --host 0.0.0.0 --port 8000
+BASE="$(cd "$(dirname "$0")" && pwd)"
+
+echo "Starting backend on :8000..."
+cd "$BASE"
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 &
+BACK_PID=$!
+
+echo "Starting frontend on :3000..."
+cd "$BASE/frontend"
+npx next dev --port 3000 &
+FRONT_PID=$!
+
+echo ""
+echo "Backend:  http://localhost:8000/docs"
+echo "Frontend: http://localhost:3000"
+echo "Admin:    http://localhost:3000/admin"
+echo "Press Ctrl+C to stop both"
+
+trap "kill $BACK_PID $FRONT_PID 2>/dev/null" EXIT
+wait

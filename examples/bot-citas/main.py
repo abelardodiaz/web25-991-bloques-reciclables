@@ -19,9 +19,12 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import date, datetime, time, timedelta, timezone
 
-from fastapi import Depends, HTTPException
+from typing import Optional
+
+from fastapi import Depends, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ulfblk_core import create_app, get_logger, setup_logging
@@ -61,6 +64,14 @@ app = create_app(
     lifespan=lifespan,
 )
 
+# CORS for frontend on :3000
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ---------------------------------------------------------------------------
 # Schemas
@@ -94,6 +105,25 @@ class SlotOut(BaseModel):
     start: datetime
     end: datetime
     available: bool
+
+
+class AppointmentUpdate(BaseModel):
+    client_name: Optional[str] = None
+    client_phone: Optional[str] = None
+    status: Optional[str] = None
+
+
+class AvailabilityOut(BaseModel):
+    id: int
+    day_of_week: int
+    start_time: str
+    end_time: str
+    is_active: bool
+
+
+class PaginatedResponse(BaseModel):
+    items: list
+    total: int
 
 
 # ---------------------------------------------------------------------------
@@ -247,6 +277,135 @@ async def create_appointment(body: AppointmentRequest, db: AsyncSession = Depend
         duration_minutes=appointment.duration_minutes,
         status=appointment.status,
     )
+
+
+# ---------------------------------------------------------------------------
+# React-admin compatible endpoints
+# ---------------------------------------------------------------------------
+@app.get("/api/appointments")
+async def list_appointments(
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    sort: str = Query("id"),
+    order: str = Query("ASC"),
+    db: AsyncSession = Depends(db_dep),
+):
+    """List appointments with pagination for react-admin."""
+    total_result = await db.execute(select(func.count(Appointment.id)))
+    total = total_result.scalar() or 0
+
+    stmt = select(Appointment)
+    sort_col = getattr(Appointment, sort, Appointment.id)
+    if order.upper() == "DESC":
+        stmt = stmt.order_by(sort_col.desc())
+    else:
+        stmt = stmt.order_by(sort_col.asc())
+    stmt = stmt.offset((page - 1) * size).limit(size)
+
+    result = await db.execute(stmt)
+    appointments = result.scalars().all()
+
+    items = [
+        AppointmentOut(
+            id=a.id,
+            client_name=a.client_name,
+            client_phone=a.client_phone,
+            scheduled_at=a.scheduled_at,
+            duration_minutes=a.duration_minutes,
+            status=a.status,
+        )
+        for a in appointments
+    ]
+    return {"items": [item.model_dump(mode="json") for item in items], "total": total}
+
+
+@app.get("/api/appointments/{appointment_id}")
+async def get_appointment(appointment_id: int, db: AsyncSession = Depends(db_dep)):
+    """Get a single appointment by ID."""
+    result = await db.execute(
+        select(Appointment).where(Appointment.id == appointment_id)
+    )
+    appointment = result.scalar_one_or_none()
+    if appointment is None:
+        raise HTTPException(status_code=404, detail="Appointment not found.")
+    return AppointmentOut(
+        id=appointment.id,
+        client_name=appointment.client_name,
+        client_phone=appointment.client_phone,
+        scheduled_at=appointment.scheduled_at,
+        duration_minutes=appointment.duration_minutes,
+        status=appointment.status,
+    )
+
+
+@app.put("/api/appointments/{appointment_id}")
+async def update_appointment(
+    appointment_id: int,
+    body: AppointmentUpdate,
+    db: AsyncSession = Depends(db_dep),
+):
+    """Update an appointment by ID."""
+    result = await db.execute(
+        select(Appointment).where(Appointment.id == appointment_id)
+    )
+    appointment = result.scalar_one_or_none()
+    if appointment is None:
+        raise HTTPException(status_code=404, detail="Appointment not found.")
+
+    if body.client_name is not None:
+        appointment.client_name = body.client_name
+    if body.client_phone is not None:
+        appointment.client_phone = body.client_phone
+    if body.status is not None:
+        appointment.status = body.status
+
+    await db.commit()
+    await db.refresh(appointment)
+
+    return AppointmentOut(
+        id=appointment.id,
+        client_name=appointment.client_name,
+        client_phone=appointment.client_phone,
+        scheduled_at=appointment.scheduled_at,
+        duration_minutes=appointment.duration_minutes,
+        status=appointment.status,
+    )
+
+
+@app.get("/api/availabilities")
+async def list_availabilities(
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    sort: str = Query("id"),
+    order: str = Query("ASC"),
+    db: AsyncSession = Depends(db_dep),
+):
+    """List availabilities with pagination for react-admin."""
+    total_result = await db.execute(select(func.count(Availability.id)))
+    total = total_result.scalar() or 0
+
+    stmt = select(Availability)
+    sort_col = getattr(Availability, sort, Availability.id)
+    if order.upper() == "DESC":
+        stmt = stmt.order_by(sort_col.desc())
+    else:
+        stmt = stmt.order_by(sort_col.asc())
+    stmt = stmt.offset((page - 1) * size).limit(size)
+
+    result = await db.execute(stmt)
+    availabilities = result.scalars().all()
+
+    items = [
+        AvailabilityOut(
+            id=a.id,
+            day_of_week=a.day_of_week,
+            start_time=str(a.start_time),
+            end_time=str(a.end_time),
+            is_active=a.is_active,
+        )
+        for a in availabilities
+    ]
+    return {"items": [item.model_dump(mode="json") for item in items], "total": total}
 
 
 @app.delete("/api/appointments/{appointment_id}")
