@@ -14,8 +14,8 @@ from models import Appointment, Availability, BlockedSlot
 from ulfblk_scheduling import generate_slots
 
 INTENTS: dict[str, list[str]] = {
-    "book": ["agendar", "cita", "reservar", "appointment", "book"],
     "cancel": ["cancelar", "cancel"],
+    "book": ["agendar", "cita", "reservar", "appointment", "book"],
     "slots": ["horarios", "disponible", "slots", "available"],
     "help": ["ayuda", "help", "info"],
 }

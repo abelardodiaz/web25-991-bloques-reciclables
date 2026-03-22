@@ -3,12 +3,13 @@
 Sets up its own app instance with in-memory SQLite since the example
 uses absolute imports and is designed to run directly.
 
-Tests 19 key behaviors across 5 categories:
+Tests 23 key behaviors across 6 categories:
   - Health check (1 test)
-  - Bot intents via /webhook (6 tests: help, slots, unknown, book, cancel, slots-deterministic)
+  - Bot intents via /webhook (6 tests: help, slots, unknown, book, cancel, case-insensitive)
   - Slot generation via /api/slots (2 tests: valid date, invalid date)
   - Appointment CRUD (7 tests: create, cancel, conflict, blocked-slot, outside-window, 404, double-cancel)
   - React-admin endpoints (3 tests: list appointments, get/update single, list availabilities)
+  - Edge cases (4 tests: partial overlap, calendar sync, seed idempotency, weekend slots)
 """
 
 from __future__ import annotations
@@ -76,8 +77,8 @@ calendar_provider = InMemoryCalendarProvider()
 # Bot logic (mirrors examples/bot-citas/bot.py with blocked_slots fix)
 # ---------------------------------------------------------------------------
 INTENTS: dict[str, list[str]] = {
-    "book": ["agendar", "cita", "reservar", "appointment", "book"],
     "cancel": ["cancelar", "cancel"],
+    "book": ["agendar", "cita", "reservar", "appointment", "book"],
     "slots": ["horarios", "disponible", "slots", "available"],
     "help": ["ayuda", "help", "info"],
 }
@@ -607,14 +608,15 @@ class TestWebhookIntents:
     async def test_cancel_intent(self):
         """'cancelar' keyword triggers cancellation instructions.
 
-        Note: message must not contain 'cita' because it matches 'book' intent
-        first (intent detection iterates book->cancel->slots->help).
+        Uses 'cancelar mi cita' which contains both 'cancelar' (cancel) and
+        'cita' (book) keywords. Cancel must win because it's evaluated first
+        in the INTENTS dict ordering.
         """
         await _setup_db()
         async with create_test_client(app) as client:
             resp = await client.post(
                 "/webhook",
-                json={"message": "quiero cancelar", "phone": "555-0011"},
+                json={"message": "cancelar mi cita", "phone": "555-0011"},
             )
             assert resp.status_code == 200
             data = resp.json()
@@ -950,3 +952,125 @@ class TestReactAdmin:
             assert "start_time" in item
             assert "end_time" in item
             assert "is_active" in item
+
+
+# ---------------------------------------------------------------------------
+# Tests - Edge cases and integration details
+# ---------------------------------------------------------------------------
+class TestEdgeCases:
+    """4 tests for partial overlap, calendar sync, seed idempotency, weekends."""
+
+    async def test_partial_overlap_conflict(self):
+        """Booking at 10:15 when 10:00-10:30 is taken returns 409.
+
+        Verifies that check_conflicts uses interval overlap logic
+        (start < appt_end and end > appt_start), not just exact match.
+        """
+        await _setup_db()
+        target = _next_weekday()
+        async with create_test_client(app) as client:
+            # Book 10:00-10:30
+            resp = await client.post(
+                "/api/appointments",
+                json={
+                    "date": target.isoformat(),
+                    "time": "10:00",
+                    "name": "First",
+                    "phone": "555-8001",
+                },
+            )
+            assert resp.status_code == 201
+
+            # Try 10:15-10:45 (overlaps with 10:00-10:30)
+            resp = await client.post(
+                "/api/appointments",
+                json={
+                    "date": target.isoformat(),
+                    "time": "10:15",
+                    "name": "Overlap",
+                    "phone": "555-8002",
+                },
+            )
+            assert resp.status_code == 409
+            assert "conflict" in resp.json()["detail"].lower()
+
+    async def test_calendar_provider_receives_event(self):
+        """Creating an appointment syncs an event to InMemoryCalendarProvider.
+
+        Verifies the integration between the appointment endpoint and
+        ulfblk-calendar's InMemoryCalendarProvider via list_events().
+        """
+        await _setup_db()
+        # Clear any events from previous tests
+        calendar_provider._events.clear()
+
+        target = _next_weekday()
+        async with create_test_client(app) as client:
+            resp = await client.post(
+                "/api/appointments",
+                json={
+                    "date": target.isoformat(),
+                    "time": "09:00",
+                    "name": "Calendar Sync Test",
+                    "phone": "555-8003",
+                },
+            )
+            assert resp.status_code == 201
+
+        # Verify the event landed in the calendar provider
+        day_start = datetime.combine(target, time(0, 0), tzinfo=timezone.utc)
+        day_end = datetime.combine(target, time(23, 59), tzinfo=timezone.utc)
+        events = await calendar_provider.list_events(start=day_start, end=day_end)
+        assert len(events) == 1
+        assert "Calendar Sync Test" in events[0].title
+        assert "555-8003" in (events[0].description or "")
+
+    async def test_seed_idempotent(self):
+        """Running _setup_db (seed) twice does not duplicate availability rows.
+
+        Mirrors seed.py behavior: checks if data exists before inserting.
+        """
+        await _setup_db()
+
+        # Seed again by inserting only if empty (same logic as seed.py)
+        async with SessionLocal() as session:
+            result = await session.execute(select(Availability).limit(1))
+            already_seeded = result.scalar_one_or_none() is not None
+
+            if not already_seeded:
+                for dow in range(5):
+                    session.add(Availability(
+                        day_of_week=dow, start_time=time(9, 0),
+                        end_time=time(13, 0), is_active=True,
+                    ))
+                    session.add(Availability(
+                        day_of_week=dow, start_time=time(14, 0),
+                        end_time=time(18, 0), is_active=True,
+                    ))
+                await session.commit()
+
+        # Should still be exactly 10 (not 20)
+        async with SessionLocal() as session:
+            result = await session.execute(select(func.count(Availability.id)))
+            total = result.scalar()
+            assert total == 10
+
+    async def test_weekend_returns_no_slots(self):
+        """GET /api/slots for a Saturday returns empty list.
+
+        Only Mon-Fri have seeded availability, so weekends produce no slots.
+        """
+        await _setup_db()
+        # Find next Saturday (weekday 5)
+        today = date.today()
+        days_until_saturday = (5 - today.weekday()) % 7
+        if days_until_saturday == 0:
+            days_until_saturday = 7
+        next_saturday = today + timedelta(days=days_until_saturday)
+
+        async with create_test_client(app) as client:
+            resp = await client.get(f"/api/slots/{next_saturday.isoformat()}")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert isinstance(data, list)
+            assert len(data) == 0

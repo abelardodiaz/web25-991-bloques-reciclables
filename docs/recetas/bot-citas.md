@@ -182,7 +182,7 @@ al backend Python (evita problemas de CORS en produccion).
 
 ## Tests
 
-19 tests E2E en `tests/recipes/bot_citas/test_bot_citas.py`:
+23 tests E2E en `tests/recipes/bot_citas/test_bot_citas.py`:
 
 | Categoria | Tests | Que verifican |
 |-----------|-------|---------------|
@@ -191,6 +191,7 @@ al backend Python (evita problemas de CORS en produccion).
 | Slots API | 2 | lista de slots valida, fecha invalida 400 |
 | Appointments | 7 | crear, cancelar, conflicto, blocked slot, fuera de ventana, 404, doble cancel |
 | React-admin | 3 | listar con paginacion, get/update individual, listar disponibilidades |
+| Edge cases | 4 | overlap parcial, sync a calendar provider, seed idempotente, fin de semana |
 
 ```bash
 uv run pytest tests/recipes/bot_citas/ -v
