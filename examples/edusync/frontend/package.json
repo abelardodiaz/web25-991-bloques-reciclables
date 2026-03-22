@@ -1,0 +1,33 @@
+{
+  "name": "edusync-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "@ulfblk/admin": "^0.1.0",
+    "@ulfblk/api-client": "^0.1.1",
+    "@ulfblk/auth-react": "^0.1.0",
+    "@ulfblk/calendar-ui": "^0.1.0",
+    "@ulfblk/dashboard": "^0.1.0",
+    "@ulfblk/forms": "^0.1.0",
+    "@ulfblk/ui": "^0.1.0",
+    "jwt-decode": "^4.0.0",
+    "next": "16.2.1",
+    "postcss": "^8.5.8",
+    "react": "19.2.4",
+    "react-admin": "^5.14.4",
+    "react-dom": "19.2.4",
+    "tailwindcss": "^4.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}
