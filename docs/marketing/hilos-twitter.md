@@ -52,3 +52,57 @@ github.com/abelardodiaz/web25-991-bloques-reciclables
 7/ Open source, MIT. 100+ tests, publicado en PyPI y npm. Si construyes SaaS con FastAPI, echale un ojo.
 
 github.com/abelardodiaz/web25-991-bloques-reciclables
+
+---
+
+## Hilo 3: EduSync - la prueba de fuego
+
+1/ "Con estos bloques puedes construir un SaaS real?" Me lo preguntaron. Asi que lo hice. Construi una plataforma educativa completa con 11 de los 14 bloques Python de ulfblk. 31 tests. Backend + frontend. Desde cero.
+
+2/ EduSync tiene: cursos con lecciones, inscripciones con tracking de progreso, sesiones en vivo con instructores, tutor IA con RAG, reglas de automation para certificaciones, billing Stripe, cache Redis, y multitenancy. No es un TODO app.
+
+3/ Lo dividi en 4 fases, cada una agregando bloques sobre la anterior:
+
+Fase 1: core + db + scheduling + calendar (lo basico)
+Fase 2: auth + multitenant (JWT RBAC, tenant isolation)
+Fase 3: ai-rag + automation + notifications (inteligencia)
+Fase 4: billing + redis (negocio + performance)
+
+4/ El scheduling de sesiones en vivo reutiliza AppointmentMixin y generate_slots() directamente de ulfblk-scheduling. El mismo codigo que maneja citas medicas maneja clases virtuales. Cero lineas de scheduling nuevo.
+
+5/ Lo mas interesante: la automation. Tres reglas en 30 lineas:
+- Completas todas las lecciones? enrollment.status = "completed"
+- Score >= 80 en final exam? Notificacion de certificado
+- Regla deshabilitada? No se ejecuta
+
+RuleEngine de ulfblk-automation, sin if/elif chains.
+
+6/ Auth con 3 roles reales (student, instructor, admin). El estudiante ve cursos. El instructor crea cursos. El admin ve usuarios. Cada uno tiene su dashboard. No es auth de juguete - es RBAC con JWT RS256.
+
+7/ El test mas revelador: tenant isolation. Login como Acme, ves cursos de Acme. Login como Globex, ves cursos de Globex. Misma base de datos, aislamiento transparente via TenantContext. En produccion seria PostgreSQL RLS.
+
+8/ 31 tests, 84 en total del repo, 0 failures. El codigo esta en examples/edusync/ con backend Python + frontend Next.js. Juzga tu mismo.
+
+github.com/abelardodiaz/web25-991-bloques-reciclables
+
+---
+
+## Hilo 4: El ROI real de reciclar modulos
+
+1/ "Construir bloques reutilizables es perder el tiempo." Lo escucho seguido. Asi que medi cuanto ahorre construyendo EduSync (plataforma educativa SaaS) con ulfblk vs desde cero. Los numeros:
+
+2/ Auth JWT con RBAC y RS256: 2 dias desde cero. Con ulfblk-auth: 1 hora (import JWTManager, generar keys, 5 lineas de config). Ahorro: 90%.
+
+3/ Scheduling completo (slots, conflictos, availability): 3 dias desde cero. Con ulfblk-scheduling: 0 horas. Ya existia de la receta anterior (bot-citas). Reutilice AppointmentMixin y generate_slots() sin cambiar una linea. Ahorro: 100%.
+
+4/ Rule engine para automation: 2 dias desde cero (disenar modelo de reglas, evaluador de condiciones, handlers). Con ulfblk-automation: 30 minutos para definir 3 reglas. Ahorro: 95%.
+
+5/ Multitenancy con aislamiento de datos: 3 dias desde cero (contextvars, middleware, filtros en queries). Con ulfblk-multitenant: 1 hora (set_current_tenant() y filtro manual en SQLite, RLS automatico en PostgreSQL). Ahorro: 90%.
+
+6/ Total estimado: 13 dias de trabajo senior comprimidos en 4 horas. No porque el codigo sea trivial, sino porque las decisiones ya estan tomadas. Como manejar timezone con SQLite. Como detectar conflictos de horario. Como aislar tenants. Esas decisiones cuestan mas que el codigo.
+
+7/ El truco no es que los bloques sean brillantes. Es que cada uno tiene tests (450+ en total), cada uno resuelve UN problema, y ninguno depende de los demas. Usas 4 para un bot de citas. Usas 11 para una plataforma educativa. Usas 14 si quieres todo.
+
+8/ El valor real de un ecosistema composable no es ahorrarte lineas de codigo. Es ahorrarte las 2am debugging un edge case de timezone que alguien ya resolvio, testeo, y documento. Eso es lo que reciclas.
+
+github.com/abelardodiaz/web25-991-bloques-reciclables
