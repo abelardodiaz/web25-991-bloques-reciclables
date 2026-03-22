@@ -1,0 +1,34 @@
+[project]
+name = "example-edusync"
+version = "0.1.0"
+description = "EduSync educational SaaS example using 11 ulfblk blocks"
+requires-python = ">=3.11"
+dependencies = [
+    "ulfblk-core",
+    "ulfblk-db",
+    "ulfblk-auth",
+    "ulfblk-multitenant",
+    "ulfblk-scheduling",
+    "ulfblk-calendar",
+    "ulfblk-notifications",
+    "ulfblk-ai-rag",
+    "ulfblk-automation",
+    "ulfblk-billing",
+    "ulfblk-redis",
+    "aiosqlite>=0.20",
+    "uvicorn>=0.30",
+    "cryptography>=42.0",
+]
+
+[tool.uv.sources]
+ulfblk-core = { workspace = true }
+ulfblk-db = { workspace = true }
+ulfblk-auth = { workspace = true }
+ulfblk-multitenant = { workspace = true }
+ulfblk-scheduling = { workspace = true }
+ulfblk-calendar = { workspace = true }
+ulfblk-notifications = { workspace = true }
+ulfblk-ai-rag = { workspace = true }
+ulfblk-automation = { workspace = true }
+ulfblk-billing = { workspace = true }
+ulfblk-redis = { workspace = true }

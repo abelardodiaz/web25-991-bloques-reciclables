@@ -22,7 +22,7 @@ export default function StudentSchedule() {
     try {
       const token = localStorage.getItem("edusync_token");
       const dateStr = formatDate(date);
-      const res = await fetch(`/api/sessions/slots/instructor-1/${dateStr}`, {
+      const res = await fetch(`/api/sessions/slots/2/${dateStr}`, {
         headers: { Authorization: `Bearer ${token || ""}` },
       });
       if (res.ok) {
