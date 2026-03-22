@@ -1,7 +1,6 @@
 """Tests for SchedulingSettings."""
 
 from ulfblk_core import BloqueSettings
-
 from ulfblk_scheduling import SchedulingSettings
 
 

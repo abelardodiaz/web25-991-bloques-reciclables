@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta, timezone
-from typing import TYPE_CHECKING, Protocol, Sequence
+from collections.abc import Sequence
+from datetime import UTC, date, datetime, time, timedelta
+from typing import TYPE_CHECKING, Protocol
 
 from ..schemas.slot import Slot
 
@@ -96,10 +97,10 @@ def generate_slots(
 
     for availability in day_availabilities:
         current_start = datetime.combine(
-            target_date, availability.start_time, tzinfo=timezone.utc
+            target_date, availability.start_time, tzinfo=UTC
         )
         window_end = datetime.combine(
-            target_date, availability.end_time, tzinfo=timezone.utc
+            target_date, availability.end_time, tzinfo=UTC
         )
 
         while current_start + timedelta(minutes=duration_minutes) <= window_end:

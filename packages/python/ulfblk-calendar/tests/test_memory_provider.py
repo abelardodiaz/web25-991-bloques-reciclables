@@ -1,14 +1,12 @@
 """Tests for InMemoryCalendarProvider."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
-
 from ulfblk_calendar import (
     CalendarEvent,
     EventCreate,
     EventUpdate,
-    InMemoryCalendarProvider,
 )
 from ulfblk_calendar.exceptions import CalendarSyncError
 
@@ -23,7 +21,7 @@ class TestInMemoryCalendarProviderCreate:
 
     @pytest.mark.asyncio
     async def test_create_assigns_unique_ids(self, memory_provider):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         event = EventCreate(title="E1", start=now, end=now)
         r1 = await memory_provider.create_event(event)
         r2 = await memory_provider.create_event(event)
@@ -31,7 +29,7 @@ class TestInMemoryCalendarProviderCreate:
 
     @pytest.mark.asyncio
     async def test_create_preserves_all_fields(self, memory_provider):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         event = EventCreate(
             title="Full",
             start=now,
@@ -75,7 +73,7 @@ class TestInMemoryCalendarProviderDelete:
     async def test_delete_event(self, memory_provider, sample_event_create):
         created = await memory_provider.create_event(sample_event_create)
         await memory_provider.delete_event(created.external_id)
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         events = await memory_provider.list_events(
             now - timedelta(days=1), now + timedelta(days=1)
         )
@@ -90,7 +88,7 @@ class TestInMemoryCalendarProviderDelete:
 class TestInMemoryCalendarProviderList:
     @pytest.mark.asyncio
     async def test_list_events_in_range(self, memory_provider):
-        base = datetime(2025, 6, 15, 10, 0, tzinfo=timezone.utc)
+        base = datetime(2025, 6, 15, 10, 0, tzinfo=UTC)
         e1 = EventCreate(title="E1", start=base, end=base + timedelta(hours=1))
         e2 = EventCreate(
             title="E2",
@@ -116,13 +114,13 @@ class TestInMemoryCalendarProviderList:
 
     @pytest.mark.asyncio
     async def test_list_events_empty(self, memory_provider):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         results = await memory_provider.list_events(now, now + timedelta(hours=1))
         assert results == []
 
     @pytest.mark.asyncio
     async def test_list_events_sorted_by_start(self, memory_provider):
-        base = datetime(2025, 6, 15, 10, 0, tzinfo=timezone.utc)
+        base = datetime(2025, 6, 15, 10, 0, tzinfo=UTC)
         late = EventCreate(
             title="Late",
             start=base + timedelta(hours=3),

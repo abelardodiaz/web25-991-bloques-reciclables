@@ -2,10 +2,10 @@
 
 
 import pytest
-from ulfblk_channels.email.router import EmailRouter
-from ulfblk_channels.models.message import ChannelType
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from ulfblk_channels.email.router import EmailRouter
+from ulfblk_channels.models.message import ChannelType
 
 
 def _make_email_payload(sender="user@example.com", text="Hello", subject="Test"):

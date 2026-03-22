@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from sqlalchemy.orm import DeclarativeBase
+    pass
 
 from .config import MigrationSettings
 from .env_template import ALEMBIC_INI_TEMPLATE, ENV_PY_TEMPLATE, SCRIPT_PY_MAKO_TEMPLATE
@@ -78,7 +77,6 @@ def create_migration(
         Path to the generated migration file.
     """
     from alembic import command
-    from alembic.config import Config
 
     if settings is None:
         settings = MigrationSettings()

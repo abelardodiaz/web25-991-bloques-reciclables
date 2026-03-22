@@ -4,12 +4,12 @@ from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from ulfblk_channels.models.message import ChannelType
 from ulfblk_channels.whatsapp.client import WhatsAppClient
 from ulfblk_channels.whatsapp.router import WhatsAppRouter
 from ulfblk_channels.whatsapp.signature import verify_whatsapp_signature
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
 
 
 def _make_wa_payload(text="Hola", sender="5215512345678", msg_id="wamid.abc"):

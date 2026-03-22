@@ -1,7 +1,6 @@
 """BlockedSlotMixin: composable SQLAlchemy mixin for blocked time slots."""
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -28,12 +27,12 @@ class BlockedSlotMixin:
         DateTime(timezone=True),
         nullable=False,
     )
-    resource_id: Mapped[Optional[str]] = mapped_column(
+    resource_id: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
         default=None,
     )
-    reason: Mapped[Optional[str]] = mapped_column(
+    reason: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
         default=None,

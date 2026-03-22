@@ -1,13 +1,13 @@
 """Tests for rate limiter middleware and backends."""
 
 import pytest
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from ulfblk_gateway.rate_limiter import (
     InMemoryBackend,
     RateLimiterMiddleware,
     RateLimiterSettings,
 )
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
 
 
 def create_rate_limited_app(

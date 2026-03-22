@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, time, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import Column, Integer, inspect as sa_inspect
+from sqlalchemy import Column, Integer
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import DeclarativeBase
-
 from ulfblk_scheduling import AppointmentMixin, AvailabilityMixin, BlockedSlotMixin
 
 
@@ -60,7 +60,7 @@ class TestAppointmentMixin:
             __tablename__ = "_test_appt4"
             id = Column(Integer, primary_key=True)
 
-        obj = _ApptModel4(scheduled_at=datetime.now(timezone.utc))
+        obj = _ApptModel4(scheduled_at=datetime.now(UTC))
         obj.cancel()
         assert obj.status == "cancelled"
 
@@ -69,7 +69,7 @@ class TestAppointmentMixin:
             __tablename__ = "_test_appt5"
             id = Column(Integer, primary_key=True)
 
-        obj = _ApptModel5(scheduled_at=datetime.now(timezone.utc))
+        obj = _ApptModel5(scheduled_at=datetime.now(UTC))
         obj.confirm()
         assert obj.status == "confirmed"
 
@@ -78,7 +78,7 @@ class TestAppointmentMixin:
             __tablename__ = "_test_appt6"
             id = Column(Integer, primary_key=True)
 
-        obj = _ApptModel6(scheduled_at=datetime.now(timezone.utc))
+        obj = _ApptModel6(scheduled_at=datetime.now(UTC))
         obj.complete()
         assert obj.status == "completed"
 
@@ -87,7 +87,7 @@ class TestAppointmentMixin:
             __tablename__ = "_test_appt7"
             id = Column(Integer, primary_key=True)
 
-        obj = _ApptModel7(scheduled_at=datetime.now(timezone.utc))
+        obj = _ApptModel7(scheduled_at=datetime.now(UTC))
         obj.mark_no_show()
         assert obj.status == "no_show"
 
@@ -146,8 +146,8 @@ class TestBlockedSlotMixin:
             id = Column(Integer, primary_key=True)
 
         obj = _BlockModel3(
-            start_at=datetime.now(timezone.utc),
-            end_at=datetime.now(timezone.utc),
+            start_at=datetime.now(UTC),
+            end_at=datetime.now(UTC),
         )
         assert obj.resource_id is None
         assert obj.reason is None

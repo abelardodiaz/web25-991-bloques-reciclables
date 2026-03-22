@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from ulfblk_core import BloqueSettings
 from pydantic_settings import SettingsConfigDict
+from ulfblk_core import BloqueSettings
 
 
 class WhatsAppSettings(BloqueSettings):

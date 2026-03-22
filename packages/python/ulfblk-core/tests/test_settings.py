@@ -1,6 +1,5 @@
 """Tests for BloqueSettings configuration."""
 
-import pytest
 
 from ulfblk_core.config.settings import BloqueSettings
 

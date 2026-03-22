@@ -1,7 +1,6 @@
 """AvailabilityMixin: composable SQLAlchemy mixin for recurring availability."""
 
 from datetime import time
-from typing import Optional
 
 from sqlalchemy import Boolean, Integer, String, Time
 from sqlalchemy.orm import Mapped, mapped_column
@@ -33,7 +32,7 @@ class AvailabilityMixin:
         Time,
         nullable=False,
     )
-    resource_id: Mapped[Optional[str]] = mapped_column(
+    resource_id: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
         default=None,

@@ -1,10 +1,10 @@
 """Tests for global exception handlers."""
 
 import pytest
-from ulfblk_core.exceptions.handlers import register_exception_handlers
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from pydantic import BaseModel
+from ulfblk_core.exceptions.handlers import register_exception_handlers
 
 
 def _make_app():

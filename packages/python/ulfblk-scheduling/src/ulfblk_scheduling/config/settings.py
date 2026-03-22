@@ -1,7 +1,7 @@
 """SchedulingSettings: scheduling configuration extending BloqueSettings."""
 
-from ulfblk_core import BloqueSettings
 from pydantic_settings import SettingsConfigDict
+from ulfblk_core import BloqueSettings
 
 
 class SchedulingSettings(BloqueSettings):

@@ -4,9 +4,7 @@ import os
 import tempfile
 from pathlib import Path
 
-import pytest
-
-from ulfblk_db.migrations import MigrationSettings, init_migrations, run_upgrade
+from ulfblk_db.migrations import MigrationSettings, init_migrations
 
 
 class TestMigrationSettings:

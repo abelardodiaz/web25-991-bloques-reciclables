@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import UTC, date, datetime, time
 
 from ulfblk_scheduling.services.slot_generator import generate_slots
 
@@ -61,7 +61,7 @@ class TestGenerateSlots:
             end_time=time(11, 0),
         )
         existing = FakeAppointment(
-            scheduled_at=datetime(2024, 1, 15, 9, 30, tzinfo=timezone.utc),
+            scheduled_at=datetime(2024, 1, 15, 9, 30, tzinfo=UTC),
             duration_minutes=30,
             status="confirmed",
         )
@@ -85,7 +85,7 @@ class TestGenerateSlots:
             end_time=time(10, 0),
         )
         cancelled = FakeAppointment(
-            scheduled_at=datetime(2024, 1, 15, 9, 0, tzinfo=timezone.utc),
+            scheduled_at=datetime(2024, 1, 15, 9, 0, tzinfo=UTC),
             duration_minutes=30,
             status="cancelled",
         )
@@ -106,8 +106,8 @@ class TestGenerateSlots:
             end_time=time(11, 0),
         )
         block = FakeBlockedSlot(
-            start_at=datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc),
-            end_at=datetime(2024, 1, 15, 11, 0, tzinfo=timezone.utc),
+            start_at=datetime(2024, 1, 15, 10, 0, tzinfo=UTC),
+            end_at=datetime(2024, 1, 15, 11, 0, tzinfo=UTC),
             reason="Lunch break",
         )
         slots = generate_slots(
@@ -137,9 +137,9 @@ class TestGenerateSlots:
         # With 30min slots + 15min buffer = 45min step
         # 9:00, 9:45, 10:30 (10:30+30=11:00 fits)
         assert len(slots) == 3
-        assert slots[0].start == datetime(2024, 1, 15, 9, 0, tzinfo=timezone.utc)
-        assert slots[1].start == datetime(2024, 1, 15, 9, 45, tzinfo=timezone.utc)
-        assert slots[2].start == datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
+        assert slots[0].start == datetime(2024, 1, 15, 9, 0, tzinfo=UTC)
+        assert slots[1].start == datetime(2024, 1, 15, 9, 45, tzinfo=UTC)
+        assert slots[2].start == datetime(2024, 1, 15, 10, 30, tzinfo=UTC)
 
     def test_multiple_availabilities_same_day(self):
         """Multiple availability windows on the same day should all generate slots."""

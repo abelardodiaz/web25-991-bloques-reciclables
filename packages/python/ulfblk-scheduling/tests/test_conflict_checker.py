@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 from ulfblk_scheduling.services.conflict_checker import (
@@ -16,36 +16,36 @@ from .conftest import FakeAppointment, FakeBlockedSlot
 class TestCheckConflicts:
     def test_no_conflict_empty_appointments(self):
         """No conflict when there are no existing appointments."""
-        start = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 15, 10, 0, tzinfo=UTC)
+        end = datetime(2024, 1, 15, 10, 30, tzinfo=UTC)
         assert check_conflicts(start, end, []) is False
 
     def test_conflict_with_overlapping_appointment(self):
         """Detect conflict when appointment overlaps."""
-        start = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 15, 10, 0, tzinfo=UTC)
+        end = datetime(2024, 1, 15, 10, 30, tzinfo=UTC)
         existing = FakeAppointment(
-            scheduled_at=datetime(2024, 1, 15, 10, 15, tzinfo=timezone.utc),
+            scheduled_at=datetime(2024, 1, 15, 10, 15, tzinfo=UTC),
             duration_minutes=30,
         )
         assert check_conflicts(start, end, [existing]) is True
 
     def test_no_conflict_adjacent_appointments(self):
         """Adjacent (non-overlapping) appointments should not conflict."""
-        start = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 15, 11, 0, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 15, 10, 30, tzinfo=UTC)
+        end = datetime(2024, 1, 15, 11, 0, tzinfo=UTC)
         existing = FakeAppointment(
-            scheduled_at=datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc),
+            scheduled_at=datetime(2024, 1, 15, 10, 0, tzinfo=UTC),
             duration_minutes=30,
         )
         assert check_conflicts(start, end, [existing]) is False
 
     def test_cancelled_appointment_no_conflict(self):
         """Cancelled appointments should not cause conflicts."""
-        start = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 15, 10, 0, tzinfo=UTC)
+        end = datetime(2024, 1, 15, 10, 30, tzinfo=UTC)
         cancelled = FakeAppointment(
-            scheduled_at=datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc),
+            scheduled_at=datetime(2024, 1, 15, 10, 0, tzinfo=UTC),
             duration_minutes=30,
             status="cancelled",
         )
@@ -53,21 +53,21 @@ class TestCheckConflicts:
 
     def test_conflict_with_blocked_slot(self):
         """Detect conflict when time range overlaps a blocked slot."""
-        start = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 15, 10, 0, tzinfo=UTC)
+        end = datetime(2024, 1, 15, 10, 30, tzinfo=UTC)
         block = FakeBlockedSlot(
-            start_at=datetime(2024, 1, 15, 9, 0, tzinfo=timezone.utc),
-            end_at=datetime(2024, 1, 15, 11, 0, tzinfo=timezone.utc),
+            start_at=datetime(2024, 1, 15, 9, 0, tzinfo=UTC),
+            end_at=datetime(2024, 1, 15, 11, 0, tzinfo=UTC),
         )
         assert check_conflicts(start, end, [], blocked_slots=[block]) is True
 
     def test_no_conflict_outside_blocked_slot(self):
         """No conflict when time range is outside blocked slot."""
-        start = datetime(2024, 1, 15, 14, 0, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 15, 14, 30, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 15, 14, 0, tzinfo=UTC)
+        end = datetime(2024, 1, 15, 14, 30, tzinfo=UTC)
         block = FakeBlockedSlot(
-            start_at=datetime(2024, 1, 15, 9, 0, tzinfo=timezone.utc),
-            end_at=datetime(2024, 1, 15, 11, 0, tzinfo=timezone.utc),
+            start_at=datetime(2024, 1, 15, 9, 0, tzinfo=UTC),
+            end_at=datetime(2024, 1, 15, 11, 0, tzinfo=UTC),
         )
         assert check_conflicts(start, end, [], blocked_slots=[block]) is False
 
@@ -75,7 +75,7 @@ class TestCheckConflicts:
 class TestIsWithinAdvanceLimits:
     def test_within_limits(self):
         """Time within the allowed window should return True."""
-        now = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
+        now = datetime(2024, 1, 15, 10, 0, tzinfo=UTC)
         # 2 hours from now, within 60 days
         start = now + timedelta(hours=2)
         with patch(
@@ -88,7 +88,7 @@ class TestIsWithinAdvanceLimits:
 
     def test_too_soon(self):
         """Time before minimum advance should return False."""
-        now = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
+        now = datetime(2024, 1, 15, 10, 0, tzinfo=UTC)
         start = now + timedelta(minutes=30)  # Only 30 min ahead
         with patch(
             "ulfblk_scheduling.services.conflict_checker.datetime"
@@ -100,7 +100,7 @@ class TestIsWithinAdvanceLimits:
 
     def test_too_far_ahead(self):
         """Time beyond maximum advance should return False."""
-        now = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
+        now = datetime(2024, 1, 15, 10, 0, tzinfo=UTC)
         start = now + timedelta(days=90)  # 90 days ahead, max is 60
         with patch(
             "ulfblk_scheduling.services.conflict_checker.datetime"

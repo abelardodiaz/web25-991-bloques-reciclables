@@ -1,9 +1,7 @@
 """Tests for engine factory and health check."""
 
-import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.pool import StaticPool
-
 from ulfblk_db import DatabaseSettings, create_async_engine, db_health_check
 
 

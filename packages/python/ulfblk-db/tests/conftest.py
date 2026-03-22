@@ -2,7 +2,6 @@
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
-
 from ulfblk_db import DatabaseSettings, create_async_engine, create_session_factory
 
 

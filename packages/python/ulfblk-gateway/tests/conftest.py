@@ -1,11 +1,11 @@
 """Shared fixtures for ulfblk-gateway tests."""
 
 import pytest
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from ulfblk_gateway.circuit_breaker import CircuitBreaker, CircuitBreakerSettings
 from ulfblk_gateway.proxy import ProxyHandler, ProxyRoute, ProxySettings
 from ulfblk_gateway.rate_limiter import InMemoryBackend, RateLimiterSettings
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
 
 
 def create_test_app() -> FastAPI:

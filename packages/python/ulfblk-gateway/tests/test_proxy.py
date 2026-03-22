@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from ulfblk_gateway.circuit_breaker import CircuitBreaker, CircuitBreakerSettings
 from ulfblk_gateway.proxy import (
     ProxyHandler,
@@ -11,8 +13,6 @@ from ulfblk_gateway.proxy import (
     ProxyRoute,
     ProxySettings,
 )
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture

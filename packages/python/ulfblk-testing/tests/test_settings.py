@@ -1,7 +1,6 @@
 """Tests for settings override utilities."""
 
 from ulfblk_core import BloqueSettings
-
 from ulfblk_testing import create_test_settings, override_settings
 
 

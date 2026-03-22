@@ -1,8 +1,7 @@
 """Tests for CalendarSettings."""
 
-from ulfblk_core import BloqueSettings
-
 from ulfblk_calendar import CalendarSettings
+from ulfblk_core import BloqueSettings
 
 
 class TestCalendarSettings:

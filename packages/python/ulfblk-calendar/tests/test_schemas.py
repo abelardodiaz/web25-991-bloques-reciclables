@@ -1,13 +1,13 @@
 """Tests for calendar event schemas."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ulfblk_calendar import CalendarEvent, EventCreate, EventUpdate
 
 
 class TestEventCreate:
     def test_minimal_fields(self):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         event = EventCreate(title="Test", start=now, end=now)
         assert event.title == "Test"
         assert event.start == now
@@ -17,7 +17,7 @@ class TestEventCreate:
         assert event.attendees == []
 
     def test_all_fields(self):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         event = EventCreate(
             title="Full Event",
             start=now,
@@ -49,7 +49,7 @@ class TestEventUpdate:
 
 class TestCalendarEvent:
     def test_full_event(self):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         event = CalendarEvent(
             external_id="abc-123",
             title="Meeting",
@@ -64,7 +64,7 @@ class TestCalendarEvent:
         assert event.attendees == ["x@y.com"]
 
     def test_defaults(self):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         event = CalendarEvent(
             external_id="id-1",
             title="Minimal",

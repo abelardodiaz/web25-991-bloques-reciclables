@@ -24,6 +24,12 @@ __all__ = [
 
 def __getattr__(name: str):
     if name in ("MigrationSettings", "init_migrations", "create_migration", "run_upgrade", "run_downgrade"):
-        from .migrations import MigrationSettings, init_migrations, create_migration, run_upgrade, run_downgrade
+        from .migrations import (
+            MigrationSettings,
+            create_migration,
+            init_migrations,
+            run_downgrade,
+            run_upgrade,
+        )
         return locals()[name]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

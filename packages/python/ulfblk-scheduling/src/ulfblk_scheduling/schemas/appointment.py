@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
-class AppointmentStatus(str, Enum):
+class AppointmentStatus(StrEnum):
     """Valid appointment statuses."""
 
     PENDING = "pending"
@@ -31,8 +30,8 @@ class AppointmentCreate(BaseModel):
 
     scheduled_at: datetime
     duration_minutes: int = Field(default=30, gt=0)
-    resource_id: Optional[str] = None
-    notes: Optional[str] = None
+    resource_id: str | None = None
+    notes: str | None = None
 
 
 class AppointmentUpdate(BaseModel):
@@ -46,8 +45,8 @@ class AppointmentUpdate(BaseModel):
         notes: New notes (optional).
     """
 
-    scheduled_at: Optional[datetime] = None
-    duration_minutes: Optional[int] = Field(default=None, gt=0)
-    status: Optional[AppointmentStatus] = None
-    resource_id: Optional[str] = None
-    notes: Optional[str] = None
+    scheduled_at: datetime | None = None
+    duration_minutes: int | None = Field(default=None, gt=0)
+    status: AppointmentStatus | None = None
+    resource_id: str | None = None
+    notes: str | None = None

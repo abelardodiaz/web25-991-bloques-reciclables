@@ -3,12 +3,12 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from ulfblk_auth.brute_force import BruteForceProtection
 from ulfblk_auth.brute_force.protection import LoginAttemptState
 from ulfblk_auth.credentials import CredentialEncryptor
 from ulfblk_auth.jwt import JWTManager
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
 
 
 @pytest.fixture

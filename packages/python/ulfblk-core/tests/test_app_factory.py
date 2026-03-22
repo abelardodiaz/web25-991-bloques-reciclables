@@ -1,9 +1,9 @@
 """Tests for create_app factory."""
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 from ulfblk_core.app import create_app
 from ulfblk_core.config.settings import BloqueSettings
-from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture

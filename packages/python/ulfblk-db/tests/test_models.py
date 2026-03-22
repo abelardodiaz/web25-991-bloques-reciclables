@@ -2,9 +2,9 @@
 
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, inspect as sa_inspect
+from sqlalchemy import Column, Integer, String
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import DeclarativeBase
-
 from ulfblk_db import Base, SoftDeleteMixin, TimestampMixin
 
 

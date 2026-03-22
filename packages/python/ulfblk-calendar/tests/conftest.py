@@ -1,9 +1,8 @@
 """Shared fixtures for ulfblk-calendar tests."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
-
 from ulfblk_calendar import CalendarSettings, EventCreate, InMemoryCalendarProvider
 
 
@@ -22,7 +21,7 @@ def memory_provider() -> InMemoryCalendarProvider:
 @pytest.fixture
 def sample_event_create() -> EventCreate:
     """Sample EventCreate for tests."""
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     return EventCreate(
         title="Test Meeting",
         start=now + timedelta(hours=1),

@@ -3,17 +3,29 @@ name = "bloques-reciclables"
 version = "0.1.0"
 description = "Ecosistema open source de bloques de codigo reciclables"
 requires-python = ">=3.11"
+dependencies = [
+    "ulfblk-core",
+]
 
 [tool.uv.workspace]
-members = ["packages/python/*", "examples/*"]
+members = [
+    "packages/python/*",
+    "examples/*",
+    "latest",
+]
 
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+exclude = ["examples/", "tests/", ".venv/", "templates/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B"]
-ignore = ["B008"]  # Allow Depends() in FastAPI default args
+ignore = ["B008", "B904", "E501"]  # B008: Depends() defaults, B904: raise from, E501: line length
+
+[tool.ruff.lint.per-file-ignores]
+"**/providers/google.py" = ["F401"]  # HttpError imported inside try/except
+"**/ulfblk_db/__init__.py" = ["F401"]  # Lazy imports via __getattr__
 
 [tool.pytest.ini_options]
 testpaths = ["packages/python", "tests"]
@@ -27,7 +39,9 @@ dev = [
     "pytest-asyncio>=1.3.0",
     "ulfblk-testing",
     "fakeredis[lua]>=2.21",
+    "ruff>=0.15.0",
 ]
 
 [tool.uv.sources]
+ulfblk-core = { workspace = true }
 ulfblk-testing = { workspace = true }

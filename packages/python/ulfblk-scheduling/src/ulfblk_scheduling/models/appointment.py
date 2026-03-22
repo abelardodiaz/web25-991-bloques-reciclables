@@ -1,7 +1,6 @@
 """AppointmentMixin: composable SQLAlchemy mixin for appointment models."""
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -35,12 +34,12 @@ class AppointmentMixin:
         nullable=False,
         default="pending",
     )
-    resource_id: Mapped[Optional[str]] = mapped_column(
+    resource_id: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
         default=None,
     )
-    notes: Mapped[Optional[str]] = mapped_column(
+    notes: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
         default=None,

@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from typing import Any
 
-from ulfblk_core.logging import get_logger
 from redis.exceptions import ResponseError
+from ulfblk_core.logging import get_logger
 
 from ..client.manager import RedisManager
 from .models import StreamMessage

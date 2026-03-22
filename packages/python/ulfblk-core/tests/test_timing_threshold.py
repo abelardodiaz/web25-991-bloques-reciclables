@@ -4,9 +4,9 @@ import asyncio
 import logging
 
 import pytest
-from ulfblk_core.middleware.timing import TimingMiddleware
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from ulfblk_core.middleware.timing import TimingMiddleware
 
 
 def _make_app(threshold: float | None = None):

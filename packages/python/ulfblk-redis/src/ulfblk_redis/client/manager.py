@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from typing import Self
 
-from ulfblk_core.logging import get_logger
 from pydantic_settings import SettingsConfigDict
 from redis.asyncio import ConnectionPool, Redis
-
 from ulfblk_core import BloqueSettings
+from ulfblk_core.logging import get_logger
 
 logger = get_logger(__name__)
 

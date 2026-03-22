@@ -1,9 +1,7 @@
 """Tests for session factory and dependency."""
 
-import inspect
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
 from ulfblk_db import create_session_factory, get_db_session
 
 

@@ -3,20 +3,19 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Type
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config.settings import SchedulingSettings
-from ..exceptions import ConflictError, SlotUnavailableError
+from ..exceptions import ConflictError
 from ..schemas.appointment import AppointmentCreate
-from .conflict_checker import check_conflicts
 
 
 async def create_appointment(
     session: AsyncSession,
-    model_class: Type[Any],
+    model_class: type[Any],
     data: AppointmentCreate,
     settings: SchedulingSettings | None = None,
 ) -> Any:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, time, timezone
+from datetime import UTC, datetime, time
 
 from ulfblk_scheduling.schemas.appointment import (
     AppointmentCreate,
@@ -26,14 +26,14 @@ class TestAppointmentStatus:
 
 class TestAppointmentCreate:
     def test_defaults(self):
-        dt = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
+        dt = datetime(2024, 1, 15, 10, 0, tzinfo=UTC)
         schema = AppointmentCreate(scheduled_at=dt)
         assert schema.duration_minutes == 30
         assert schema.resource_id is None
         assert schema.notes is None
 
     def test_custom_values(self):
-        dt = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
+        dt = datetime(2024, 1, 15, 10, 0, tzinfo=UTC)
         schema = AppointmentCreate(
             scheduled_at=dt,
             duration_minutes=60,
@@ -56,14 +56,14 @@ class TestAppointmentUpdate:
 
 class TestSlot:
     def test_slot_creation(self):
-        start = datetime(2024, 1, 15, 9, 0, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 15, 9, 30, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 15, 9, 0, tzinfo=UTC)
+        end = datetime(2024, 1, 15, 9, 30, tzinfo=UTC)
         slot = Slot(start=start, end=end)
         assert slot.available is True
 
     def test_slot_unavailable(self):
-        start = datetime(2024, 1, 15, 9, 0, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 15, 9, 30, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 15, 9, 0, tzinfo=UTC)
+        end = datetime(2024, 1, 15, 9, 30, tzinfo=UTC)
         slot = Slot(start=start, end=end, available=False)
         assert slot.available is False
 

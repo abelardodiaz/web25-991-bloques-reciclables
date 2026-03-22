@@ -1,6 +1,5 @@
 """Tests for CalendarProvider protocol satisfaction."""
 
-from typing import runtime_checkable
 
 from ulfblk_calendar import CalendarProvider, InMemoryCalendarProvider
 

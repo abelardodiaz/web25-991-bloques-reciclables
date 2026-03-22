@@ -2,7 +2,6 @@
 
 from fastapi import FastAPI, Request
 from httpx import AsyncClient
-
 from ulfblk_testing import create_authenticated_client, create_test_client
 
 

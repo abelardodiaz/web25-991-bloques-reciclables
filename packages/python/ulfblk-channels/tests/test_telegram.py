@@ -4,12 +4,12 @@ from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from ulfblk_channels.models.message import ChannelType
 from ulfblk_channels.telegram.client import TelegramClient
 from ulfblk_channels.telegram.router import TelegramRouter
 from ulfblk_channels.telegram.signature import verify_telegram_secret
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
 
 
 def _make_tg_update(text="Hola", chat_id=12345, message_id=1):

@@ -1,9 +1,9 @@
 """Tests for health router factory."""
 
 import pytest
-from ulfblk_core.health.router import create_health_router, health_router
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from ulfblk_core.health.router import create_health_router, health_router
 
 
 def _make_app(router):

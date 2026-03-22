@@ -15,7 +15,6 @@ from fastapi import FastAPI
 
 from .client import create_test_client
 
-
 # -- Always-available fixtures (base deps) --
 
 

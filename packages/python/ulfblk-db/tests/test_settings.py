@@ -1,9 +1,7 @@
 """Tests for DatabaseSettings."""
 
-import os
 
 from ulfblk_core import BloqueSettings
-
 from ulfblk_db import DatabaseSettings
 
 

@@ -5,7 +5,6 @@ from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import StaticPool
-
 from ulfblk_testing.db import create_tables, create_test_engine, create_test_session_factory
 
 

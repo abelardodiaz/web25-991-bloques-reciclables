@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime, timedelta
 
 from .slot_generator import AppointmentLike, BlockedSlotLike
 
@@ -73,7 +73,7 @@ def is_within_advance_limits(
             max_days=60,
         )
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     min_time = now + timedelta(hours=min_hours)
     max_time = now + timedelta(days=max_days)
 

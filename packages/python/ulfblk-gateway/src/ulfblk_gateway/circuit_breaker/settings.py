@@ -1,7 +1,7 @@
 """Circuit breaker configuration."""
 
-from ulfblk_core import BloqueSettings
 from pydantic_settings import SettingsConfigDict
+from ulfblk_core import BloqueSettings
 
 
 class CircuitBreakerSettings(BloqueSettings):

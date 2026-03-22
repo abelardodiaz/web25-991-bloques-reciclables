@@ -1,7 +1,6 @@
 """Shared fixtures for ulfblk-core tests."""
 
 import pytest
-
 from ulfblk_core.config.settings import BloqueSettings
 
 
