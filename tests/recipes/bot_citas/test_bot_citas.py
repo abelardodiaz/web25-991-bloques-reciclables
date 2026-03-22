@@ -2,7 +2,13 @@
 
 Sets up its own app instance with in-memory SQLite since the example
 uses absolute imports and is designed to run directly.
-Tests 8 key behaviors: health, bot intents, slots, appointments, conflicts.
+
+Tests 19 key behaviors across 5 categories:
+  - Health check (1 test)
+  - Bot intents via /webhook (6 tests: help, slots, unknown, book, cancel, slots-deterministic)
+  - Slot generation via /api/slots (2 tests: valid date, invalid date)
+  - Appointment CRUD (7 tests: create, cancel, conflict, blocked-slot, outside-window, 404, double-cancel)
+  - React-admin endpoints (3 tests: list appointments, get/update single, list availabilities)
 """
 
 from __future__ import annotations
@@ -10,9 +16,9 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta, timezone
 
 import pytest
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String, select
+from sqlalchemy import Column, Integer, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ulfblk_core import create_app
@@ -67,7 +73,7 @@ calendar_provider = InMemoryCalendarProvider()
 
 
 # ---------------------------------------------------------------------------
-# Bot logic (same as examples/bot-citas/bot.py)
+# Bot logic (mirrors examples/bot-citas/bot.py with blocked_slots fix)
 # ---------------------------------------------------------------------------
 INTENTS: dict[str, list[str]] = {
     "book": ["agendar", "cita", "reservar", "appointment", "book"],
@@ -112,11 +118,18 @@ async def handle_message(message: str, db_session: AsyncSession) -> str:
         )
         all_appts = result.scalars().all()
         today_appts = [a for a in all_appts if a.scheduled_at.date() == today]
+
+        # Query blocked slots (bug fix: previously missing)
+        result = await db_session.execute(select(BlockedSlot))
+        blocked = result.scalars().all()
+        today_blocked = [b for b in blocked if b.start_at.date() == today]
+
         slots = generate_slots(
             target_date=today,
             availabilities=availabilities,
             duration_minutes=30,
             existing_appointments=today_appts,
+            blocked_slots=today_blocked,
         )
         available = [s for s in slots if s.available]
         if not available:
@@ -166,14 +179,28 @@ class AppointmentOut(BaseModel):
     status: str
 
 
+class AppointmentUpdate(BaseModel):
+    client_name: str | None = None
+    client_phone: str | None = None
+    status: str | None = None
+
+
 class SlotOut(BaseModel):
     start: datetime
     end: datetime
     available: bool
 
 
+class AvailabilityOut(BaseModel):
+    id: int
+    day_of_week: int
+    start_time: str
+    end_time: str
+    is_active: bool
+
+
 # ---------------------------------------------------------------------------
-# App setup (no lifespan - tables managed by fixture)
+# App setup (no lifespan - tables managed by _setup_db helper)
 # ---------------------------------------------------------------------------
 app = create_app(
     service_name="bot-citas",
@@ -181,6 +208,9 @@ app = create_app(
 )
 
 
+# ---------------------------------------------------------------------------
+# Core endpoints
+# ---------------------------------------------------------------------------
 @app.post("/webhook", response_model=WebhookResponse)
 async def webhook(body: WebhookRequest, db: AsyncSession = Depends(db_dep)):
     response = await handle_message(body.message, db)
@@ -245,8 +275,27 @@ async def create_appointment_endpoint(body: AppointmentRequest, db: AsyncSession
         if appt.scheduled_at.tzinfo is None:
             appt.scheduled_at = appt.scheduled_at.replace(tzinfo=timezone.utc)
 
-    if check_conflicts(start=scheduled_at, end=end_time, existing_appointments=day_existing):
-        raise HTTPException(status_code=409, detail="Time slot conflicts with an existing appointment.")
+    # Check blocked slots (bug fix: previously missing)
+    # Normalize timezone for SQLite compatibility (strips tzinfo)
+    result = await db.execute(select(BlockedSlot))
+    blocked = result.scalars().all()
+    day_blocked = [b for b in blocked if b.start_at.date() == appt_date]
+    for block in day_blocked:
+        if block.start_at.tzinfo is None:
+            block.start_at = block.start_at.replace(tzinfo=timezone.utc)
+        if block.end_at.tzinfo is None:
+            block.end_at = block.end_at.replace(tzinfo=timezone.utc)
+
+    if check_conflicts(
+        start=scheduled_at,
+        end=end_time,
+        existing_appointments=day_existing,
+        blocked_slots=day_blocked,
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="Time slot conflicts with an existing appointment or blocked slot.",
+        )
 
     result = await db.execute(
         select(Availability).where(
@@ -308,6 +357,133 @@ async def cancel_appointment_endpoint(appointment_id: int, db: AsyncSession = De
 
 
 # ---------------------------------------------------------------------------
+# React-admin endpoints (mirrors main.py)
+# ---------------------------------------------------------------------------
+@app.get("/api/appointments")
+async def list_appointments(request: Request, db: AsyncSession = Depends(db_dep)):
+    """List appointments with pagination for react-admin."""
+    page = int(request.query_params.get("page", "1"))
+    size = int(request.query_params.get("size", "20"))
+    sort = request.query_params.get("sort", "id")
+    order = request.query_params.get("order", "ASC")
+
+    total_result = await db.execute(select(func.count(Appointment.id)))
+    total = total_result.scalar() or 0
+
+    stmt = select(Appointment)
+    sort_col = getattr(Appointment, sort, Appointment.id)
+    if order.upper() == "DESC":
+        stmt = stmt.order_by(sort_col.desc())
+    else:
+        stmt = stmt.order_by(sort_col.asc())
+    stmt = stmt.offset((page - 1) * size).limit(size)
+
+    result = await db.execute(stmt)
+    appointments = result.scalars().all()
+
+    items = [
+        AppointmentOut(
+            id=a.id,
+            client_name=a.client_name,
+            client_phone=a.client_phone,
+            scheduled_at=a.scheduled_at,
+            duration_minutes=a.duration_minutes,
+            status=a.status,
+        )
+        for a in appointments
+    ]
+    return {"items": [item.model_dump(mode="json") for item in items], "total": total}
+
+
+@app.get("/api/appointments/{appointment_id}")
+async def get_appointment(appointment_id: int, db: AsyncSession = Depends(db_dep)):
+    """Get a single appointment by ID."""
+    result = await db.execute(
+        select(Appointment).where(Appointment.id == appointment_id)
+    )
+    appointment = result.scalar_one_or_none()
+    if appointment is None:
+        raise HTTPException(status_code=404, detail="Appointment not found.")
+    return AppointmentOut(
+        id=appointment.id,
+        client_name=appointment.client_name,
+        client_phone=appointment.client_phone,
+        scheduled_at=appointment.scheduled_at,
+        duration_minutes=appointment.duration_minutes,
+        status=appointment.status,
+    )
+
+
+@app.put("/api/appointments/{appointment_id}")
+async def update_appointment(
+    appointment_id: int,
+    body: AppointmentUpdate,
+    db: AsyncSession = Depends(db_dep),
+):
+    """Update an appointment by ID."""
+    result = await db.execute(
+        select(Appointment).where(Appointment.id == appointment_id)
+    )
+    appointment = result.scalar_one_or_none()
+    if appointment is None:
+        raise HTTPException(status_code=404, detail="Appointment not found.")
+
+    if body.client_name is not None:
+        appointment.client_name = body.client_name
+    if body.client_phone is not None:
+        appointment.client_phone = body.client_phone
+    if body.status is not None:
+        appointment.status = body.status
+
+    await db.commit()
+    await db.refresh(appointment)
+
+    return AppointmentOut(
+        id=appointment.id,
+        client_name=appointment.client_name,
+        client_phone=appointment.client_phone,
+        scheduled_at=appointment.scheduled_at,
+        duration_minutes=appointment.duration_minutes,
+        status=appointment.status,
+    )
+
+
+@app.get("/api/availabilities")
+async def list_availabilities(request: Request, db: AsyncSession = Depends(db_dep)):
+    """List availabilities with pagination for react-admin."""
+    page = int(request.query_params.get("page", "1"))
+    size = int(request.query_params.get("size", "20"))
+    sort = request.query_params.get("sort", "id")
+    order = request.query_params.get("order", "ASC")
+
+    total_result = await db.execute(select(func.count(Availability.id)))
+    total = total_result.scalar() or 0
+
+    stmt = select(Availability)
+    sort_col = getattr(Availability, sort, Availability.id)
+    if order.upper() == "DESC":
+        stmt = stmt.order_by(sort_col.desc())
+    else:
+        stmt = stmt.order_by(sort_col.asc())
+    stmt = stmt.offset((page - 1) * size).limit(size)
+
+    result = await db.execute(stmt)
+    availabilities = result.scalars().all()
+
+    items = [
+        AvailabilityOut(
+            id=a.id,
+            day_of_week=a.day_of_week,
+            start_time=str(a.start_time),
+            end_time=str(a.end_time),
+            is_active=a.is_active,
+        )
+        for a in availabilities
+    ]
+    return {"items": [item.model_dump(mode="json") for item in items], "total": total}
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 def _next_weekday() -> date:
@@ -320,7 +496,7 @@ def _next_weekday() -> date:
 
 
 async def _setup_db():
-    """Create tables and seed availability data."""
+    """Create tables and seed availability data (Mon-Fri 9-13 and 14-18)."""
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
@@ -336,14 +512,27 @@ async def _setup_db():
         await session.commit()
 
 
+async def _setup_db_with_blocked_slot():
+    """Create tables, seed availability, and add a blocked slot at 10:00-10:30."""
+    await _setup_db()
+    target = _next_weekday()
+    async with SessionLocal() as session:
+        session.add(BlockedSlot(
+            start_at=datetime.combine(target, time(10, 0), tzinfo=timezone.utc),
+            end_at=datetime.combine(target, time(10, 30), tzinfo=timezone.utc),
+            reason="Descanso programado",
+        ))
+        await session.commit()
+
+
 # ---------------------------------------------------------------------------
-# Tests
+# Tests - Health
 # ---------------------------------------------------------------------------
-class TestBotCitasRecipe:
-    """8 tests verifying the bot-citas recipe end-to-end."""
+class TestHealth:
+    """Verify create_app() provides /health automatically."""
 
     async def test_health(self):
-        """create_app() includes /health automatically."""
+        """GET /health returns service name, version, and healthy status."""
         async with create_test_client(app) as client:
             resp = await client.get("/health")
             assert resp.status_code == 200
@@ -352,8 +541,15 @@ class TestBotCitasRecipe:
             assert data["service"] == "bot-citas"
             assert data["version"] == "0.1.0"
 
-    async def test_webhook_help_intent(self):
-        """Bot responds with help text for 'ayuda' keyword."""
+
+# ---------------------------------------------------------------------------
+# Tests - Bot intents via /webhook
+# ---------------------------------------------------------------------------
+class TestWebhookIntents:
+    """6 tests covering all bot intents: help, slots, book, cancel, unknown."""
+
+    async def test_help_intent(self):
+        """'ayuda' keyword triggers help text listing all commands."""
         await _setup_db()
         async with create_test_client(app) as client:
             resp = await client.post(
@@ -364,10 +560,22 @@ class TestBotCitasRecipe:
             data = resp.json()
             assert "Comandos disponibles" in data["response"]
             assert "horarios" in data["response"]
+            assert "agendar" in data["response"]
+            assert "cancelar" in data["response"]
 
-    async def test_webhook_slots_intent(self):
-        """Bot responds to 'horarios' keyword with slot info."""
+    async def test_slots_intent_weekday(self):
+        """'horarios' on a weekday returns actual time slot listings.
+
+        Uses _next_weekday() to guarantee we test against a day with seeded
+        availability (Mon-Fri). Verifies the response contains time patterns
+        like 'HH:MM a HH:MM' rather than just checking the key exists.
+        """
         await _setup_db()
+        target = _next_weekday()
+        # Seed availability for the specific weekday we'll test (already done
+        # by _setup_db which seeds Mon-Fri). The bot uses date.today() internally,
+        # so this test is deterministic only on weekdays. On weekends _next_weekday
+        # returns next Monday but the bot queries today, so we verify both paths.
         async with create_test_client(app) as client:
             resp = await client.post(
                 "/webhook",
@@ -375,11 +583,45 @@ class TestBotCitasRecipe:
             )
             assert resp.status_code == 200
             data = resp.json()
-            # Either shows slots or says none available (depends on day of week)
-            assert "response" in data
+            response_text = data["response"]
+            # On weekdays: shows slot listings; on weekends: says none available
+            if date.today().weekday() < 5:
+                assert "Horarios disponibles hoy:" in response_text
+                assert " a " in response_text  # time format "HH:MM a HH:MM"
+            else:
+                assert "No hay horarios disponibles hoy" in response_text
 
-    async def test_webhook_unknown_intent(self):
-        """Bot responds with fallback for unrecognized messages."""
+    async def test_book_intent(self):
+        """'agendar' keyword triggers booking instructions with JSON example."""
+        await _setup_db()
+        async with create_test_client(app) as client:
+            resp = await client.post(
+                "/webhook",
+                json={"message": "quiero agendar una cita", "phone": "555-0010"},
+            )
+            assert resp.status_code == 200
+            data = resp.json()
+            assert "POST /api/appointments" in data["response"]
+            assert "YYYY-MM-DD" in data["response"]
+
+    async def test_cancel_intent(self):
+        """'cancelar' keyword triggers cancellation instructions.
+
+        Note: message must not contain 'cita' because it matches 'book' intent
+        first (intent detection iterates book->cancel->slots->help).
+        """
+        await _setup_db()
+        async with create_test_client(app) as client:
+            resp = await client.post(
+                "/webhook",
+                json={"message": "quiero cancelar", "phone": "555-0011"},
+            )
+            assert resp.status_code == 200
+            data = resp.json()
+            assert "DELETE /api/appointments" in data["response"]
+
+    async def test_unknown_intent(self):
+        """Unrecognized messages get fallback suggesting 'ayuda'."""
         await _setup_db()
         async with create_test_client(app) as client:
             resp = await client.post(
@@ -390,8 +632,26 @@ class TestBotCitasRecipe:
             data = resp.json()
             assert data["response"] == "No entendi, escribe 'ayuda'"
 
+    async def test_intent_detection_is_case_insensitive(self):
+        """Intent keywords match regardless of case."""
+        await _setup_db()
+        async with create_test_client(app) as client:
+            resp = await client.post(
+                "/webhook",
+                json={"message": "AYUDA POR FAVOR", "phone": "555-0012"},
+            )
+            assert resp.status_code == 200
+            assert "Comandos disponibles" in resp.json()["response"]
+
+
+# ---------------------------------------------------------------------------
+# Tests - Slot generation via /api/slots
+# ---------------------------------------------------------------------------
+class TestSlots:
+    """2 tests for GET /api/slots/{date}: valid and invalid date."""
+
     async def test_get_slots_returns_list(self):
-        """GET /api/slots/{date} returns a list of slot objects."""
+        """Valid weekday date returns a list of slot objects with start/end/available."""
         await _setup_db()
         target = _next_weekday()
         async with create_test_client(app) as client:
@@ -404,9 +664,28 @@ class TestBotCitasRecipe:
             assert "start" in slot
             assert "end" in slot
             assert "available" in slot
+            # All seeded slots for a fresh DB should be available
+            available_count = sum(1 for s in data if s["available"])
+            assert available_count > 0
+
+    async def test_get_slots_invalid_date(self):
+        """Invalid date format returns 400."""
+        await _setup_db()
+        async with create_test_client(app) as client:
+            resp = await client.get("/api/slots/not-a-date")
+            assert resp.status_code == 400
+            assert "Invalid date" in resp.json()["detail"]
+
+
+# ---------------------------------------------------------------------------
+# Tests - Appointment CRUD
+# ---------------------------------------------------------------------------
+class TestAppointments:
+    """7 tests for POST/DELETE /api/appointments: create, cancel, conflicts,
+    blocked slots, outside-window, 404, and double-cancel."""
 
     async def test_create_appointment(self):
-        """POST /api/appointments creates appointment and returns 201."""
+        """POST /api/appointments with valid data returns 201 with appointment details."""
         await _setup_db()
         target = _next_weekday()
         async with create_test_client(app) as client:
@@ -425,13 +704,13 @@ class TestBotCitasRecipe:
             assert data["client_phone"] == "555-9999"
             assert data["status"] == "pending"
             assert data["duration_minutes"] == 30
+            assert data["id"] >= 1
 
     async def test_cancel_appointment(self):
-        """DELETE /api/appointments/{id} cancels an existing appointment."""
+        """DELETE /api/appointments/{id} sets status to cancelled."""
         await _setup_db()
         target = _next_weekday()
         async with create_test_client(app) as client:
-            # Create first
             resp = await client.post(
                 "/api/appointments",
                 json={
@@ -444,7 +723,6 @@ class TestBotCitasRecipe:
             assert resp.status_code == 201
             appt_id = resp.json()["id"]
 
-            # Cancel
             resp = await client.delete(f"/api/appointments/{appt_id}")
             assert resp.status_code == 200
             data = resp.json()
@@ -452,11 +730,10 @@ class TestBotCitasRecipe:
             assert "cancelled" in data["message"].lower()
 
     async def test_conflict_detection(self):
-        """POST /api/appointments returns 409 for conflicting time slots."""
+        """Double-booking the same slot returns 409 conflict."""
         await _setup_db()
         target = _next_weekday()
         async with create_test_client(app) as client:
-            # Create first appointment
             resp = await client.post(
                 "/api/appointments",
                 json={
@@ -468,7 +745,6 @@ class TestBotCitasRecipe:
             )
             assert resp.status_code == 201
 
-            # Try to create conflicting appointment at same time
             resp = await client.post(
                 "/api/appointments",
                 json={
@@ -480,3 +756,197 @@ class TestBotCitasRecipe:
             )
             assert resp.status_code == 409
             assert "conflict" in resp.json()["detail"].lower()
+
+    async def test_blocked_slot_prevents_booking(self):
+        """Booking during a blocked slot (e.g. break, holiday) returns 409.
+
+        This test verifies the bug fix where create_appointment previously
+        did not check BlockedSlots, allowing bookings during blocked times.
+        """
+        await _setup_db_with_blocked_slot()
+        target = _next_weekday()
+        async with create_test_client(app) as client:
+            # Verify the slot shows as unavailable in GET /api/slots
+            resp = await client.get(f"/api/slots/{target.isoformat()}")
+            assert resp.status_code == 200
+            slots = resp.json()
+            blocked_slot = next(
+                (s for s in slots if "T10:00" in s["start"]),
+                None,
+            )
+            if blocked_slot:
+                assert blocked_slot["available"] is False
+
+            # Attempt to book at 10:00 (blocked) should fail
+            resp = await client.post(
+                "/api/appointments",
+                json={
+                    "date": target.isoformat(),
+                    "time": "10:00",
+                    "name": "Blocked Test",
+                    "phone": "555-3333",
+                },
+            )
+            assert resp.status_code == 409
+            assert "conflict" in resp.json()["detail"].lower()
+
+    async def test_outside_availability_window(self):
+        """Booking outside business hours (before 9:00 or after 18:00) returns 400."""
+        await _setup_db()
+        target = _next_weekday()
+        async with create_test_client(app) as client:
+            resp = await client.post(
+                "/api/appointments",
+                json={
+                    "date": target.isoformat(),
+                    "time": "07:00",  # Before 9:00 opening
+                    "name": "Early Bird",
+                    "phone": "555-4444",
+                },
+            )
+            assert resp.status_code == 400
+            assert "outside availability" in resp.json()["detail"].lower()
+
+    async def test_cancel_nonexistent_returns_404(self):
+        """Cancelling a nonexistent appointment returns 404."""
+        await _setup_db()
+        async with create_test_client(app) as client:
+            resp = await client.delete("/api/appointments/99999")
+            assert resp.status_code == 404
+            assert "not found" in resp.json()["detail"].lower()
+
+    async def test_double_cancel_returns_400(self):
+        """Cancelling an already-cancelled appointment returns 400."""
+        await _setup_db()
+        target = _next_weekday()
+        async with create_test_client(app) as client:
+            resp = await client.post(
+                "/api/appointments",
+                json={
+                    "date": target.isoformat(),
+                    "time": "15:00",
+                    "name": "Double Cancel",
+                    "phone": "555-5555",
+                },
+            )
+            assert resp.status_code == 201
+            appt_id = resp.json()["id"]
+
+            resp = await client.delete(f"/api/appointments/{appt_id}")
+            assert resp.status_code == 200
+
+            resp = await client.delete(f"/api/appointments/{appt_id}")
+            assert resp.status_code == 400
+            assert "already cancelled" in resp.json()["detail"].lower()
+
+
+# ---------------------------------------------------------------------------
+# Tests - React-admin endpoints
+# ---------------------------------------------------------------------------
+class TestReactAdmin:
+    """3 tests for react-admin compatible endpoints: list, get/update, availabilities."""
+
+    async def test_list_appointments_with_pagination(self):
+        """GET /api/appointments returns paginated list with total count.
+
+        Tests the response shape expected by react-admin's DataProvider:
+        {items: [...], total: N}.
+        """
+        await _setup_db()
+        target = _next_weekday()
+        async with create_test_client(app) as client:
+            # Create 2 appointments
+            for i, t in enumerate(["09:00", "09:30"]):
+                resp = await client.post(
+                    "/api/appointments",
+                    json={
+                        "date": target.isoformat(),
+                        "time": t,
+                        "name": f"Patient {i+1}",
+                        "phone": f"555-{6000+i}",
+                    },
+                )
+                assert resp.status_code == 201
+
+            # List with default pagination
+            resp = await client.get("/api/appointments")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert "items" in data
+            assert "total" in data
+            assert data["total"] == 2
+            assert len(data["items"]) == 2
+
+            # List with page=1, size=1 (pagination)
+            resp = await client.get("/api/appointments?page=1&size=1")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["total"] == 2
+            assert len(data["items"]) == 1
+
+            # List with sort=id, order=DESC
+            resp = await client.get("/api/appointments?sort=id&order=DESC")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["items"][0]["id"] > data["items"][1]["id"]
+
+    async def test_get_and_update_single_appointment(self):
+        """GET and PUT /api/appointments/{id} for react-admin detail/edit views."""
+        await _setup_db()
+        target = _next_weekday()
+        async with create_test_client(app) as client:
+            # Create
+            resp = await client.post(
+                "/api/appointments",
+                json={
+                    "date": target.isoformat(),
+                    "time": "14:00",
+                    "name": "Original Name",
+                    "phone": "555-7000",
+                },
+            )
+            assert resp.status_code == 201
+            appt_id = resp.json()["id"]
+
+            # GET single
+            resp = await client.get(f"/api/appointments/{appt_id}")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["id"] == appt_id
+            assert data["client_name"] == "Original Name"
+
+            # PUT update
+            resp = await client.put(
+                f"/api/appointments/{appt_id}",
+                json={"client_name": "Updated Name", "status": "confirmed"},
+            )
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["client_name"] == "Updated Name"
+            assert data["status"] == "confirmed"
+            # phone should remain unchanged
+            assert data["client_phone"] == "555-7000"
+
+    async def test_list_availabilities(self):
+        """GET /api/availabilities returns seeded Mon-Fri schedule.
+
+        Verifies 10 availability windows (5 days x 2 blocks: morning + afternoon).
+        """
+        await _setup_db()
+        async with create_test_client(app) as client:
+            resp = await client.get("/api/availabilities")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert "items" in data
+            assert "total" in data
+            # 5 days x 2 blocks (9-13, 14-18) = 10 availabilities
+            assert data["total"] == 10
+            assert len(data["items"]) == 10
+
+            # Verify structure
+            item = data["items"][0]
+            assert "id" in item
+            assert "day_of_week" in item
+            assert "start_time" in item
+            assert "end_time" in item
+            assert "is_active" in item

@@ -10,7 +10,7 @@ from datetime import date, datetime, time, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Appointment, Availability
+from models import Appointment, Availability, BlockedSlot
 from ulfblk_scheduling import generate_slots
 
 INTENTS: dict[str, list[str]] = {
@@ -63,11 +63,16 @@ async def _get_today_slots(db: AsyncSession) -> str:
         a for a in all_appointments if a.scheduled_at.date() == today
     ]
 
+    result = await db.execute(select(BlockedSlot))
+    blocked = result.scalars().all()
+    today_blocked = [b for b in blocked if b.start_at.date() == today]
+
     slots = generate_slots(
         target_date=today,
         availabilities=availabilities,
         duration_minutes=30,
         existing_appointments=today_appointments,
+        blocked_slots=today_blocked,
     )
 
     available = [s for s in slots if s.available]

@@ -210,15 +210,26 @@ async def create_appointment(body: AppointmentRequest, db: AsyncSession = Depend
         if appt.scheduled_at.tzinfo is None:
             appt.scheduled_at = appt.scheduled_at.replace(tzinfo=timezone.utc)
 
+    # Check blocked slots (normalize timezone for SQLite compatibility)
+    result = await db.execute(select(BlockedSlot))
+    blocked = result.scalars().all()
+    day_blocked = [b for b in blocked if b.start_at.date() == appt_date]
+    for block in day_blocked:
+        if block.start_at.tzinfo is None:
+            block.start_at = block.start_at.replace(tzinfo=timezone.utc)
+        if block.end_at.tzinfo is None:
+            block.end_at = block.end_at.replace(tzinfo=timezone.utc)
+
     has_conflict = check_conflicts(
         start=scheduled_at,
         end=end_time,
         existing_appointments=day_existing,
+        blocked_slots=day_blocked,
     )
     if has_conflict:
         raise HTTPException(
             status_code=409,
-            detail="Time slot conflicts with an existing appointment.",
+            detail="Time slot conflicts with an existing appointment or blocked slot.",
         )
 
     # Check availability
